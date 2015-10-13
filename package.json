@@ -1,0 +1,37 @@
+{
+  "name": "triton-cns",
+  "version": "0.1.0",
+  "description": "Trition container naming service",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joyent/triton-cns.git"
+  },
+  "author": "Alex Wilson",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/joyent/triton-cns/issues"
+  },
+  "homepage": "https://github.com/joyent/triton-cns#readme",
+  "devDependencies": {
+    "tape": "^4.2.1",
+    "sinon": "^1.17.2",
+    "minimatch": "^3.0.0"
+  },
+  "dependencies": {
+    "assert-plus": "0.1.5",
+    "bunyan": "1.5.1",
+    "ipaddr.js": "1.0.3",
+    "jsprim": "1.2.2",
+    "lru-cache": "2.7.0",
+    "named": "git+https://github.com/arekinath/node-named#828a1ad3988b5796d49203774fdcb53f0cedd9c4",
+    "redis": "2.1.0",
+    "restify-clients": "1.1.1",
+    "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git",
+    "uuid": "2.0.1",
+    "vasync": "1.6.3"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "properties": {
+    "my_name": {
+      "type": "string",
+      "required": true,
+      "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]).)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$"
+    },
+    "hostmaster": {
+      "type": "string",
+      "required": true,
+      "pattern": "^[^@.]+@[^@]+$"
+    },
+    "full_poll_interval": {
+      "type": "number",
+      "required": true
+    },
+    "reaper_poll_interval": {
+      "type": "number",
+      "required": true
+    },
+    "redis_opts": {
+      "type": "object",
+      "required": true
+    },
+    "mahi_opts": {
+      "type": "object",
+      "required": true,
+      "properties": {
+        "address": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "cnapi_opts": {
+      "type": "object",
+      "required": true,
+      "properties": {
+        "address": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "vmapi_opts": {
+      "type": "object",
+      "required": true,
+      "properties": {
+        "address": {
+          "type": "string",
+          "required": true
+        },
+        "limit": {
+          "type": "number",
+          "required": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "forward_zones": {
+      "type": "object",
+      "required": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "networks": {
+            "type": "array",
+            "required": true,
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[*]$|^[a-f0-9-]+$"
+            }
+          },
+          "slaves": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]).)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$"
+            }
+          },
+          "hidden_master": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "reverse_zones": {
+      "type": "object",
+      "required": true,
+      "properties": {
+        "slaves": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]).)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$"
+          }
+        },
+        "hidden_master": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

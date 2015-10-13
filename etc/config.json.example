@@ -1,0 +1,36 @@
+{
+	"my_name": "tcns0.joyent.us",
+	"hostmaster": "hostmaster@joyent.us",
+	"forward_zones": {
+		"triton-hosted.io": {
+			"networks": ["3484af3e-23db-4c63-8940-bf3e006347f3"],
+			"slaves": ["ns0.joyent.com", "ns1.joyent.com"],
+			"hidden_master": true
+		},
+		"tcns.joyent.us": {
+			"networks": ["*"]
+		}
+	},
+	"reverse_zones": {
+		"slaves": ["ns0.joyent.com", "ns1.joyent.com"],
+		"hidden_master": true
+	},
+
+	"full_poll_interval": 10000,
+	"reaper_poll_interval": 30000,
+
+	"redis_opts": {},
+
+	"mahi_opts": {
+		"address": "10.99.99.33"
+	},
+
+	"cnapi_opts": {
+		"address": "10.99.99.22"
+	},
+
+	"vmapi_opts": {
+		"address": "10.99.99.27",
+		"limit": 200
+	}
+}
