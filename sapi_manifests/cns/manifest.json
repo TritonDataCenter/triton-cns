@@ -1,5 +1,5 @@
 {
-	"name": "tcns",
+	"name": "cns",
 	"path": "/opt/triton/cns/etc/config.json",
 	"post_cmd": "/usr/sbin/svcadm restart cns-updater && /usr/sbin/svcadm restart cns-server"
 }

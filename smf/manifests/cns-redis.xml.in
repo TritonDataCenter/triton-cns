@@ -52,7 +52,7 @@
     <stability value='Unstable' />
 
     <template>
-      <common_name><loctext xml:lang="C">Redis server for TCNS</loctext></common_name>
+      <common_name><loctext xml:lang="C">Redis server for CNS</loctext></common_name>
     </template>
 
   </service>

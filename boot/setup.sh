@@ -56,7 +56,7 @@ CONFIG_AGENT_LOCAL_MANIFESTS_DIRS=$SVC_ROOT
 source /opt/smartdc/boot/lib/util.sh
 sdc_common_setup
 
-echo "Installing tcns redis"
+echo "Installing cns redis"
 sdc_setup_redis
 
 # set up services

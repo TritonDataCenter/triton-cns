@@ -14,7 +14,7 @@
 # included Makefiles (in eng.git) so that other teams can use them too.
 #
 
-NAME			:= tcns
+NAME			:= cns
 NODE_PREBUILT_TAG	 = zone
 NODE_PREBUILT_VERSION	:= v0.12.7
 NODE_PREBUILT_IMAGE	 = b4bdc598-8939-11e3-bea4-8341f6861379
@@ -91,8 +91,8 @@ publish: release
 		echo "error: 'BITS_DIR' must be set for 'publish' target"; \
 		exit 1; \
 	fi
-	mkdir -p $(BITS_DIR)/tcns
-	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/tcns/$(RELEASE_TARBALL)
+	mkdir -p $(BITS_DIR)/cns
+	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/cns/$(RELEASE_TARBALL)
 
 include ./tools/mk/Makefile.deps
 ifeq ($(shell uname -s),SunOS)
