@@ -14,7 +14,6 @@ var utils = require('../lib/utils');
 
 test('currentSerial', function (t) {
 	var sandbox;
-	var OldDate = Date;
 	var fixedDate = new Date('2015-10-01T03:24:00Z');
 
 	function MockDate() {

@@ -21,7 +21,7 @@ test('no match', function (t) {
 	var s = new NetFilter({config: {forward_zones: config}});
 	s.write({
 		uuid: 'abcd1234',
-		nics: [{network_uuid: "1234aaa"}]
+		nics: [ { network_uuid: '1234aaa' } ]
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
@@ -38,7 +38,7 @@ test('exact uuid match', function (t) {
 	var s = new NetFilter({config: {forward_zones: config}});
 	s.write({
 		uuid: 'abcd1234',
-		nics: [{network_uuid: "abc123"}]
+		nics: [ { network_uuid: 'abc123' } ]
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
@@ -58,7 +58,7 @@ test('wilcard match', function (t) {
 	var s = new NetFilter({config: {forward_zones: config}});
 	s.write({
 		uuid: 'abcd1234',
-		nics: [{network_uuid: "abc1234"}]
+		nics: [ { network_uuid: 'abc123' } ]
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
@@ -78,7 +78,7 @@ test('wildcard does not match if an exact is present', function (t) {
 	var s = new NetFilter({config: {forward_zones: config}});
 	s.write({
 		uuid: 'abcd1234',
-		nics: [{network_uuid: "abc123"}]
+		nics: [ { network_uuid: 'abc123' } ]
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');

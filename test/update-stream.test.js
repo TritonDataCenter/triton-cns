@@ -13,11 +13,6 @@ var util = require('util');
 var UpdateStream = require('../lib/update-stream');
 var MockRedis = require('./mock-redis');
 
-/*
-var bunyan = require('bunyan');
-var log = bunyan.createLogger({name: 'update-stream.test', level: 'trace'});
-*/
-
 var utils = require('../lib/utils');
 
 var sandbox;
@@ -89,7 +84,7 @@ test('records in zones are correct', function (t) {
 	var instRecs = db['zone:foo']['abc123.inst.def432'];
 	instRecs = JSON.parse(instRecs);
 	t.strictEqual(instRecs.length, 2);
-	
+
 	var aRec = instRecs[0];
 	var txtRec = instRecs[1];
 	if (aRec.constructor !== 'A' && txtRec.constructor === 'A') {
@@ -282,7 +277,7 @@ test('records in zones are correct', function (t) {
 	var instRecs = db['zone:foo']['bar.svc.def432'];
 	instRecs = JSON.parse(instRecs);
 	t.strictEqual(instRecs.length, 4);
-	
+
 	var aRecs = instRecs.filter(function (r) {
 		return (r.constructor === 'A');
 	});
