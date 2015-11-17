@@ -58,7 +58,7 @@ test('wilcard match', function (t) {
 	var s = new NetFilter({config: {forward_zones: config}});
 	s.write({
 		uuid: 'abcd1234',
-		nics: [ { network_uuid: 'abc123' } ]
+		nics: [ { network_uuid: 'abc1234' } ]
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
