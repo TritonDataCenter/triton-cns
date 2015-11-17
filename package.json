@@ -19,7 +19,8 @@
   "devDependencies": {
     "tape": "^4.2.1",
     "sinon": "^1.17.2",
-    "minimatch": "^3.0.0"
+    "minimatch": "^3.0.0",
+    "native-dns": "^0.7.0"
   },
   "dependencies": {
     "assert-plus": "0.1.5",
@@ -27,7 +28,7 @@
     "ipaddr.js": "1.0.3",
     "jsprim": "1.2.2",
     "lru-cache": "2.7.0",
-    "named": "git+https://github.com/arekinath/node-named#828a1ad3988b5796d49203774fdcb53f0cedd9c4",
+    "named": "git+https://github.com/arekinath/node-named#1da09d5",
     "redis": "2.1.0",
     "restify-clients": "1.1.1",
     "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git",
