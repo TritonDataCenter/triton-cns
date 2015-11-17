@@ -23,6 +23,7 @@ NODE_PREBUILT_IMAGE	 = b4bdc598-8939-11e3-bea4-8341f6861379
 # Tools
 #
 TAP		:= ./node_modules/.bin/tape
+ISTANBUL	:= ./node_modules/.bin/istanbul
 
 #
 # Files
@@ -58,9 +59,19 @@ all: $(REPO_DEPS) $(NPM_EXEC)
 
 CLEAN_FILES += $(TAP) ./node_modules/tape
 
+$(TAP): all
+
 .PHONY: test
-test: all $(NODE_EXEC)
+test: all $(TAP) $(NODE_EXEC)
 	TAP=1 $(NODE) $(TAP) test/*.test.js
+
+$(ISTANBUL): $(NPM_EXEC)
+	$(NPM) install istanbul
+
+.PHONY: coverage
+coverage: all $(ISTANBUL) $(NODE_EXEC)
+	$(NODE) $(ISTANBUL) cover \
+	    $(TAP) test/*.test.js
 
 .PHONY: release
 release: all docs $(SMF_MANIFESTS) $(NODE_EXEC)
