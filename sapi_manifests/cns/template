@@ -1,8 +1,31 @@
 {
+{{#my_name}}
 	"my_name": "{{{my_name}}}",
+{{/my_name}}{{^my_name}}
+	"my_name": "cns.{{{datacenter_name}}}.{{{dns_domain}}}",
+{{/my_name}}
+
+{{#hostmaster}}
 	"hostmaster": "{{{hostmaster}}}",
+{{/hostmaster}}{{^hostmaster}}
+	"hostmaster": "hostmaster@{{{dns_domain}}}",
+{{/hostmaster}}
+
+{{#forward_zones}}
 	"forward_zones": {{{forward_zones}}},
+{{/forward_zones}}{{^forward_zones}}
+	"forward_zones": {
+		"{{{datacenter_name}}}.{{{dns_domain}}}": {
+			"networks": ["*"]
+		}
+	},
+{{/forward_zones}}
+
+{{#reverse_zones}}
 	"reverse_zones": {{{reverse_zones}}},
+{{/reverse_zones}}{{^reverse_zones}}
+	"reverse_zones": {},
+{{/reverse_zones}}
 
 	"full_poll_interval": {{#full_poll_interval}}{{{full_poll_interval}}}{{/full_poll_interval}}{{^full_poll_interval}}10000{{/full_poll_interval}},
 	"reaper_poll_interval": {{#reaper_poll_interval}}{{{reaper_poll_interval}}}{{/reaper_poll_interval}}{{^reaper_poll_interval}}300000{{/reaper_poll_interval}},
