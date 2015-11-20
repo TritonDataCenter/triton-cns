@@ -33,7 +33,8 @@ test('setup sandbox', function (t) {
 test('writes nothing if given nothing', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
-		client: client
+		client: client,
+		config: {}
 	});
 	s.openSerial(false);
 	s.once('finish', function () {
@@ -54,7 +55,8 @@ var db;
 test('writes records for one container', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
-		client: client
+		client: client,
+		config: {}
 	});
 	s.openSerial(false);
 	s.write({
@@ -115,7 +117,8 @@ test('serial numbers are correct', function (t) {
 test('updates records upon a change of IP', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
-		client: client
+		client: client,
+		config: {}
 	});
 	s.openSerial(false);
 	s.write({
@@ -233,7 +236,8 @@ test('writes records for a service', function (t) {
 	currentSerial = 1;
 	var client = new MockRedis();
 	var s = new UpdateStream({
-		client: client
+		client: client,
+		config: {}
 	});
 	s.openSerial(false);
 	s.write({

@@ -19,6 +19,9 @@
 	"full_poll_interval": 10000,
 	"reaper_poll_interval": 30000,
 
+	"use_login": true,
+	"use_alias": true,
+
 	"redis_opts": {},
 
 	"mahi_opts": {

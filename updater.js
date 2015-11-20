@@ -34,7 +34,7 @@ var cnf = new CNFilter({log: log, config: conf});
 var uf = new UfdsFilter({log: log, config: conf});
 var nf = new NetFilter({log: log, config: conf});
 var fs = new FlagFilter({log: log, config: conf});
-var s = new UpdateStream({client: client, log: log});
+var s = new UpdateStream({client: client, log: log, config: conf});
 ps.pipe(cnf);
 cnf.pipe(uf);
 uf.pipe(nf);

@@ -23,6 +23,12 @@
       "type": "object",
       "required": true
     },
+    "use_login": {
+      "type": "boolean"
+    },
+    "use_alias": {
+      "type": "boolean"
+    },
     "mahi_opts": {
       "type": "object",
       "required": true,

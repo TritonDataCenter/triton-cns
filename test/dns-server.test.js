@@ -37,7 +37,8 @@ test('setup sandbox', function (t) {
 
 test('create basic dataset', function (t) {
 	var s = new UpdateStream({
-		client: redis
+		client: redis,
+		config: {}
 	});
 	s.openSerial(false);
 	s.write({
@@ -200,7 +201,8 @@ test('generate some services', function (t) {
 	++currentSerial;
 
 	var s = new UpdateStream({
-		client: redis
+		client: redis,
+		config: {}
 	});
 	s.openSerial(false);
 	s.write({
