@@ -27,9 +27,11 @@
 	"reverse_zones": {},
 {{/reverse_zones}}
 
-{{#allow_transfer}}
-	"allow_transfer": {{{allow_transfer}}},
+	"allow_transfer": [
+{{#allow_transfer}}		"{{{.}}}",
 {{/allow_transfer}}
+		"127.0.0.1"
+	],
 
 {{#use_login}}
 	"use_login": {{{use_login}}},
