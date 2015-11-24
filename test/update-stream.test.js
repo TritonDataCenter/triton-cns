@@ -309,6 +309,162 @@ test('serial numbers are correct', function (t) {
 	t.end();
 });
 
+test('service with zones with multiple nics', function (t) {
+	currentSerial = 1;
+	var client = new MockRedis();
+	var s = new UpdateStream({
+		client: client,
+		config: {}
+	});
+	s.openSerial(false);
+	s.write({
+		uuid: 'abc123',
+		services: ['bar'],
+		operation: 'add',
+		owner: {
+			uuid: 'def432'
+		},
+		nics: [
+			{
+				ip: '1.2.3.4',
+				zones: ['foo']
+			},
+			{
+				ip: '2.3.1.2',
+				zones: ['foo']
+			}
+		]
+	});
+	s.write({
+		uuid: 'abcd1234',
+		services: ['bar'],
+		operation: 'add',
+		owner: {
+			uuid: 'def432'
+		},
+		nics: [
+			{
+				ip: '1.2.3.6',
+				zones: ['foo']
+			},
+			{
+				ip: '2.3.1.4',
+				zones: ['foo']
+			}
+		]
+	});
+	s.once('finish', function () {
+		s.closeSerial(function () {
+			db = client.db;
+			t.end();
+		});
+	});
+	s.end();
+});
+
+test('records in zones are correct', function (t) {
+	var instRecs = db['zone:foo']['bar.svc.def432'];
+	instRecs = JSON.parse(instRecs);
+	t.strictEqual(instRecs.length, 6);
+
+	var aRecs = instRecs.filter(function (r) {
+		return (r.constructor === 'A');
+	});
+	t.equal(aRecs.length, 4);
+	var ips = aRecs.map(function (r) {
+		return (r.args[0]);
+	}).sort();
+	t.deepEqual(ips, ['1.2.3.4', '1.2.3.6', '2.3.1.2', '2.3.1.4']);
+
+	var txtRecs = instRecs.filter(function (r) {
+		return (r.constructor === 'TXT');
+	});
+	t.equal(txtRecs.length, 2);
+	var uuids = txtRecs.map(function (r) {
+		return (r.args[0]);
+	}).sort();
+	t.deepEqual(uuids, ['abc123', 'abcd1234']);
+
+	t.end();
+});
+
+test('serial numbers are correct', function (t) {
+	t.strictEqual(db['zone:foo:latest'], '2');
+	t.deepEqual(db['zone:foo:all'], ['2']);
+	t.end();
+});
+
+test('container with ipv6 addresses', function (t) {
+	var client = new MockRedis();
+	var s = new UpdateStream({
+		client: client,
+		config: {}
+	});
+	s.openSerial(false);
+	s.write({
+		uuid: 'abc123',
+		services: [],
+		operation: 'add',
+		owner: {
+			uuid: 'def432'
+		},
+		nics: [
+			{
+				ips: ['1.2.3.4', 'abcd:f00::1'],
+				zones: ['foo']
+			}
+		]
+	});
+	s.once('finish', function () {
+		s.closeSerial(function () {
+			db = client.db;
+			t.end();
+		});
+	});
+	s.end();
+});
+
+test('records in zones are correct', function (t) {
+	var instRecs = db['zone:foo']['abc123.inst.def432'];
+	instRecs = JSON.parse(instRecs);
+	t.strictEqual(instRecs.length, 3);
+
+	var aRecs = instRecs.filter(function (r) {
+		return (r.constructor === 'A');
+	});
+	t.equal(aRecs.length, 1);
+	var ipv4s = aRecs.map(function (r) {
+		return (r.args[0]);
+	}).sort();
+	t.deepEqual(ipv4s, ['1.2.3.4']);
+
+	var aaRecs = instRecs.filter(function (r) {
+		return (r.constructor === 'AAAA');
+	});
+	t.equal(aaRecs.length, 1);
+	var ipv6s = aaRecs.map(function (r) {
+		return (r.args[0]);
+	}).sort();
+	t.deepEqual(ipv6s, ['abcd:f00::1']);
+
+	var txtRecs = instRecs.filter(function (r) {
+		return (r.constructor === 'TXT');
+	});
+	t.equal(txtRecs.length, 1);
+	var uuids = txtRecs.map(function (r) {
+		return (r.args[0]);
+	}).sort();
+	t.deepEqual(uuids, ['abc123']);
+
+	t.end();
+});
+
+test('serial numbers are correct', function (t) {
+	t.strictEqual(db['zone:foo:latest'], '2');
+	t.deepEqual(db['zone:foo:all'], ['2']);
+	t.end();
+});
+
 test('cleanup sandbox', function (t) {
 	sandbox.restore();
 	t.end();
