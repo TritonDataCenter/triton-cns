@@ -29,6 +29,12 @@
     "use_alias": {
       "type": "boolean"
     },
+    "allow_transfer": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "mahi_opts": {
       "type": "object",
       "required": true,

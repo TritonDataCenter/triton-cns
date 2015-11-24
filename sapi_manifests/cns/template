@@ -27,6 +27,10 @@
 	"reverse_zones": {},
 {{/reverse_zones}}
 
+{{#allow_transfer}}
+	"allow_transfer": {{{allow_transfer}}},
+{{/allow_transfer}}
+
 {{#use_login}}
 	"use_login": {{{use_login}}},
 {{/use_login}}
