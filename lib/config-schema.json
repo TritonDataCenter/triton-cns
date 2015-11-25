@@ -19,6 +19,9 @@
       "type": "number",
       "required": true
     },
+    "min_notify_interval": {
+      "type": "number"
+    },
     "redis_opts": {
       "type": "object",
       "required": true

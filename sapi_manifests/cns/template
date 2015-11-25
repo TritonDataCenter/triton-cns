@@ -42,6 +42,9 @@
 
 	"full_poll_interval": {{#full_poll_interval}}{{{full_poll_interval}}}{{/full_poll_interval}}{{^full_poll_interval}}10000{{/full_poll_interval}},
 	"reaper_poll_interval": {{#reaper_poll_interval}}{{{reaper_poll_interval}}}{{/reaper_poll_interval}}{{^reaper_poll_interval}}300000{{/reaper_poll_interval}},
+{{#min_notify_interval}}
+	"min_notify_interval": {{{min_notify_interval}}},
+{{/min_notify_interval}}
 
 	"redis_opts": {},
 
