@@ -28,7 +28,7 @@
     "ipaddr.js": "1.0.3",
     "jsprim": "1.2.2",
     "lru-cache": "2.7.0",
-    "named": "git+https://github.com/arekinath/node-named#7cd83e2",
+    "named": "git+https://github.com/arekinath/node-named#02780f7",
     "redis": "2.1.0",
     "restify-clients": "1.1.1",
     "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git",
