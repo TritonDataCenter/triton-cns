@@ -20,14 +20,14 @@ var path = require('path');
 
 var confPath;
 if (process.argv[2])
-    confPath = process.argv[2];
+	confPath = process.argv[2];
 if (confPath === undefined)
-    confPath = path.join(__dirname, 'etc', 'config.json');
+	confPath = path.join(__dirname, 'etc', 'config.json');
 var conf = config.parse(confPath);
 
 var client = redis.createClient(conf.redis_opts);
 
-var log = bunyan.createLogger({name: 'cns', level: 'trace'})
+var log = bunyan.createLogger({name: 'cns', level: 'trace'});
 
 var ps = new PollerStream({log: log, config: conf});
 var cnf = new CNFilter({log: log, config: conf});
@@ -46,18 +46,18 @@ ps.start();
 ps.once('pollFinish', function () {
 	log.info('first poll done, committing...');
 	s.closeSerial();
-    
-    function poll() {
-        ps.start();
-        setTimeout(poll, 10000);
-    }
-    setTimeout(poll, 10000);
 
-    var rs = new ReaperStream({log: log, config: conf, client: client});
-    rs.pipe(cnf);
-    function reap() {
-        rs.start();
-        setTimeout(reap, 300000);
-    }
-    setTimeout(reap, 15000);
+	function poll() {
+		ps.start();
+		setTimeout(poll, 10000);
+	}
+	setTimeout(poll, 10000);
+
+	var rs = new ReaperStream({log: log, config: conf, client: client});
+	rs.pipe(cnf);
+	function reap() {
+		rs.start();
+		setTimeout(reap, 300000);
+	}
+	setTimeout(reap, 15000);
 });

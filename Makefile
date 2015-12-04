@@ -16,7 +16,7 @@
 
 NAME			:= cns
 NODE_PREBUILT_TAG	 = zone
-NODE_PREBUILT_VERSION	:= v0.12.7
+NODE_PREBUILT_VERSION	:= v0.12.9
 NODE_PREBUILT_IMAGE	 = b4bdc598-8939-11e3-bea4-8341f6861379
 
 #
@@ -28,7 +28,7 @@ ISTANBUL	:= ./node_modules/.bin/istanbul
 #
 # Files
 #
-JS_FILES	:= $(shell find lib test -name '*.js')
+JS_FILES	:= $(shell find lib test *.js -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)

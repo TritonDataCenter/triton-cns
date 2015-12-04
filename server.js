@@ -21,7 +21,7 @@ var conf = config.parse(confPath);
 
 var client = redis.createClient(conf.redis_opts);
 
-var log = bunyan.createLogger({name: 'cns', level: 'trace'})
+var log = bunyan.createLogger({name: 'cns', level: 'trace'});
 
 var s = new DNSServer({
 	client: client,
