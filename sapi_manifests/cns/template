@@ -59,5 +59,12 @@
 	"vmapi_opts": {
 		"address": "vmapi.{{{datacenter_name}}}.{{{dns_domain}}}",
 		"limit": {{#vmapi_limit}}{{{vmapi_limit}}}{{/vmapi_limit}}{{^vmapi_limit}}500{{/vmapi_limit}}
+	},
+
+	"changefeed_opts": {
+		"changeKind": {
+			"resource": 'vm',
+			"subResources": ['alias','customer_metadata','destroyed','internal_metadata','nics','owner_uuid','server_uuid','state','tags']
+		}
 	}
 }
