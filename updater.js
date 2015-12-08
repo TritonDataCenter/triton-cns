@@ -35,7 +35,7 @@ var log = bunyan.createLogger({name: 'cns', level: 'trace'});
 
 var cfOpts = {
 	log: log,
-	endpoint: 'http://' + conf.vmapi_opts.address,
+	url: 'http://' + conf.vmapi_opts.address,
 	instance: fs.readFileSync('/etc/zones/index').toString().split(':')[0],
 	service: conf.my_name,
 	changeKind: {
@@ -46,27 +46,23 @@ var cfOpts = {
 var cfl = changefeed.createListener(cfOpts);
 cfl.register();
 
-cfl.on('bootstrap', function _beginBootstrap(info) {
+cfl.on('bootstrap', function _setupPipeline(info) {
+	log.trace('_setupPipeline: start');
+	var ps = new PollerStream({log: log, config: conf});
+	var cnf = new CNFilter({log: log, config: conf});
+	var uf = new UfdsFilter({log: log, config: conf});
+	var nf = new NetFilter({log: log, config: conf});
+	var ffs = new FlagFilter({log: log, config: conf});
+	var s = new UpdateStream({client: client, log: log, config: conf});
 	vasync.pipeline({
 		'funcs': [
-			function _bootstrap(err, cb) {
-				var ps = new PollerStream(
-				    {log: log, config: conf});
-				var cnf = new CNFilter(
-				    {log: log, config: conf});
-				var uf = new UfdsFilter(
-				    {log: log, config: conf});
-				var nf = new NetFilter(
-				    {log: log, config: conf});
-				var ffs = new FlagFilter(
-				    {log: log, config: conf});
-				var s = new UpdateStream(
-				    {client: client, log: log, config: conf});
+			function _bootstrap(_, cb) {
+				log.trace('_bootstrap');
 				ps.pipe(cnf);
 				cnf.pipe(uf);
 				uf.pipe(nf);
 				nf.pipe(ffs);
-				fs.pipe(s);
+				ffs.pipe(s);
 
 				s.openSerial(false);
 				ps.start();
@@ -85,33 +81,23 @@ cfl.on('bootstrap', function _beginBootstrap(info) {
 						setTimeout(reap, 300000);
 					}
 					setTimeout(reap, 15000);
+					cb();
 				});
-
 			},
-			function _beginStreams(err, cb) {
+			function _beginChangefeed(_, cb) {
+				log.trace('_beginChangefeed');
 				var cff = new ChangefeedFilter(
 				    {log: log, config: conf});
-				var cnf = new CNFilter(
-				    {log: log, config: conf});
-				var uf = new UfdsFilter(
-				    {log: log, config: conf});
-				var nf = new NetFilter(
-				    {log: log, config: conf});
-				var ffs = new FlagFilter(
-				    {log: log, config: conf});
-				var s = new UpdateStream(
-				    {client: client, log: log, config: conf});
 				cfl.pipe(cff);
 				cff.pipe(cnf);
-				cnf.pipe(uf);
-				uf.pipe(nf);
-				nf.pipe(ffs);
-				fs.pipe(s);
-				s.openSerial(false);
-
+				cb();
 			}
 		]
 	}, function (err, results) {
-		log.error({ error: err }, '_beginBootstrap failed');
+		if (err) {
+			log.error({ error: err }, '_setupPipeline: failed');
+		} else {
+			log.trace('_setupPipeline: finished');
+		}
 	});
 });
