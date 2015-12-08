@@ -25,7 +25,7 @@
   "dependencies": {
     "assert-plus": "0.1.5",
     "bunyan": "1.5.1",
-    "changefeed": "1.1.0",
+    "changefeed": "1.1.1",
     "ipaddr.js": "1.0.3",
     "jsprim": "1.2.2",
     "lru-cache": "2.7.0",
