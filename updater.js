@@ -38,7 +38,10 @@ var cfOpts = {
 	endpoint: 'http://' + conf.vmapi_opts.address,
 	instance: fs.readFileSync('/etc/zones/index').toString().split(':')[0],
 	service: conf.my_name,
-	changeKind: conf.changefeed_opts.changeKind
+	changeKind: {
+		resource: conf.changefeed_opts.resource,
+		subResources: conf.changefeed_opts.subResources
+	}
 };
 var cfl = changefeed.createListener(cfOpts);
 cfl.register();
