@@ -35,7 +35,7 @@ var log = bunyan.createLogger({name: 'cns', level: 'trace'});
 var cfOpts = {
 	log: log,
 	endpoint: 'http://' + conf.vmapi_opts.address,
-	instance: fs.readFileSync('/etc/zones/index').toString().split(':')[0]),
+	instance: fs.readFileSync('/etc/zones/index').toString().split(':')[0],
 	service: conf.my_name,
 	changeKind: conf.changefeed_opts.changeKind
 };
