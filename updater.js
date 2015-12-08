@@ -11,6 +11,7 @@ var bunyan = require('bunyan');
 var changefeed = require('changefeed');
 var fs = require('fs');
 var vasync = require('vasync');
+var ChangefeedFilter = require('./lib/changefeed-filter');
 var UpdateStream = require('./lib/update-stream');
 var FlagFilter = require('./lib/flag-filter');
 var CNFilter = require('./lib/cn-filter');
@@ -44,7 +45,7 @@ cfl.register();
 
 cfl.on('bootstrap', function _beginBootstrap(info) {
 	vasync.pipeline({
-		[
+		'funcs': [
 			function _bootstrap(err, cb) {
 				var ps = new PollerStream(
 				    {log: log, config: conf});
