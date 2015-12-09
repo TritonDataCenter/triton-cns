@@ -4,7 +4,7 @@
   "description": "Trition container naming service",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/*.test.js"
+    "test": "tape test/unit/*.test.js"
   },
   "repository": {
     "type": "git",

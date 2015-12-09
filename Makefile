@@ -63,7 +63,7 @@ $(TAP): all
 
 .PHONY: test
 test: all $(TAP) $(NODE_EXEC)
-	TAP=1 $(NODE) $(TAP) test/*.test.js
+	TAP=1 $(NODE) $(TAP) test/unit/*.test.js
 
 $(ISTANBUL): $(NPM_EXEC)
 	$(NPM) install istanbul
@@ -81,16 +81,19 @@ release: all docs $(SMF_MANIFESTS) $(NODE_EXEC)
 	@mkdir -p $(RELSTAGEDIR)/root/opt/smartdc/build
 	@mkdir -p $(RELSTAGEDIR)/site
 	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
-	cp -r   $(TOP)/build \
-		$(TOP)/boot \
+	cp -r   $(TOP)/boot \
 		$(TOP)/lib \
 		$(TOP)/node_modules \
 		$(TOP)/package.json \
 		$(TOP)/sapi_manifests \
 		$(TOP)/{server,updater}.js \
+		$(TOP)/test \
 		$(TOP)/smf \
 		$(TOP)/etc \
 		$(RELSTAGEDIR)/root/opt/triton/cns/
+	@mkdir -p $(RELSTAGEDIR)/root/opt/triton/cns/build
+	cp -r   $(TOP)/build/node \
+		$(RELSTAGEDIR)/root/opt/triton/cns/build/
 	cp -R $(TOP)/node_modules/sdc-scripts/* $(RELSTAGEDIR)/root/opt/smartdc/boot/
 	cp -R $(TOP)/boot/* $(RELSTAGEDIR)/root/opt/smartdc/boot/
 	(cd $(RELSTAGEDIR) && $(TAR) -jcf $(TOP)/$(RELEASE_TARBALL) root site)

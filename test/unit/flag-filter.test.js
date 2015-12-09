@@ -10,7 +10,7 @@ var test = require('./test-namer')('FlagFilter');
 var sinon = require('sinon');
 var util = require('util');
 
-var FlagFilter = require('../lib/flag-filter');
+var FlagFilter = require('../../lib/flag-filter');
 
 test('processes a single service tag', function (t) {
 	var s = new FlagFilter({});

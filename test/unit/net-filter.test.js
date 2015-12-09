@@ -10,7 +10,7 @@ var test = require('./test-namer')('NetFilter');
 var sinon = require('sinon');
 var util = require('util');
 
-var NetFilter = require('../lib/net-filter');
+var NetFilter = require('../../lib/net-filter');
 
 test('no match', function (t) {
 	var config = {
