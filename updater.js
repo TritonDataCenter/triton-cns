@@ -9,7 +9,6 @@
 var redis = require('redis');
 var bunyan = require('bunyan');
 var changefeed = require('changefeed');
-var fs = require('fs');
 var vasync = require('vasync');
 var ChangefeedFilter = require('./lib/changefeed-filter');
 var UpdateStream = require('./lib/update-stream');
@@ -36,8 +35,8 @@ var log = bunyan.createLogger({name: 'cns', level: 'trace'});
 var cfOpts = {
 	log: log,
 	url: 'http://' + conf.vmapi_opts.address,
-	instance: fs.readFileSync('/etc/zones/index').toString().split(':')[0],
-	service: conf.my_name,
+	instance: conf.changefeed_opts.instance,
+	service: 'cns',
 	changeKind: {
 		resource: conf.changefeed_opts.resource,
 		subResources: conf.changefeed_opts.subResources

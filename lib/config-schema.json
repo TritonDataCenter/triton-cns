@@ -134,6 +134,10 @@
             "subResources": {
                 "type": "array",
                 "required": true
+            },
+            "instance": {
+                "type": "string",
+                "required": true
             }
         }
     }

@@ -63,6 +63,7 @@
 
 	"changefeed_opts": {
 		"resource": "vm",
-		"subResources": ["alias","customer_metadata","destroyed","internal_metadata","nics","owner_uuid","server_uuid","state","tags"]
+		"subResources": ["alias","customer_metadata","destroyed","internal_metadata","nics","owner_uuid","server_uuid","state","tags"],
+		"instance": {{{INSTANCE_UUID}}}
 	}
 }
