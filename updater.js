@@ -59,7 +59,7 @@ var exb = backoff.exponential({
 });
 exb.failAfter(Infinity);
 
-cfl.on('end', function _end() {
+cfl.on('connection-end', function _end() {
 	log.error('Changefeed listener ended');
 	exb.on('backoff', function _backoff(number, delay) {
 		log.warn('Backoff -- retry count: %s delay: %s', number, delay);
