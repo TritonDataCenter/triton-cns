@@ -7,6 +7,7 @@
  */
 
 var redis = require('redis');
+var backoff = require('backoff');
 var bunyan = require('bunyan');
 var changefeed = require('changefeed');
 var vasync = require('vasync');
@@ -43,16 +44,34 @@ var cfOpts = {
 	}
 };
 var cfl = changefeed.createListener(cfOpts);
+var ps = new PollerStream({log: log, config: conf});
+var cnf = new CNFilter({log: log, config: conf});
+var uf = new UfdsFilter({log: log, config: conf});
+var nf = new NetFilter({log: log, config: conf});
+var ffs = new FlagFilter({log: log, config: conf});
+var s = new UpdateStream({client: client, log: log, config: conf});
+
 cfl.register();
+
+var exb = backoff.exponential({
+	initialDelay: 10,
+	maxDelay: Infinity
+});
+exb.failAfter(Infinity);
+
+cfl.on('end', function _end() {
+	log.error('Changefeed listener ended');
+	exb.on('backoff', function _backoff(number, delay) {
+		log.warn('Backoff -- retry count: %s delay: %s', number, delay);
+	});
+	exb.on('ready', function _ready(number, delay) {
+		cfl.register();
+	});
+	exb.backoff();
+});
 
 cfl.on('bootstrap', function _setupPipeline(info) {
 	log.trace('_setupPipeline: start');
-	var ps = new PollerStream({log: log, config: conf});
-	var cnf = new CNFilter({log: log, config: conf});
-	var uf = new UfdsFilter({log: log, config: conf});
-	var nf = new NetFilter({log: log, config: conf});
-	var ffs = new FlagFilter({log: log, config: conf});
-	var s = new UpdateStream({client: client, log: log, config: conf});
 	vasync.pipeline({
 		'funcs': [
 			function _bootstrap(_, cb) {
@@ -89,6 +108,7 @@ cfl.on('bootstrap', function _setupPipeline(info) {
 				    {log: log, config: conf});
 				cfl.pipe(cff);
 				cff.pipe(cnf);
+				exb.reset();
 				cb();
 			}
 		]
