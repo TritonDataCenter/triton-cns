@@ -130,7 +130,7 @@ test('serves zone SOA', function (t) {
 		t.equal(answer.answer.length, 1);
 		var soa = answer.answer[0];
 		t.strictEqual(soa.name, 'foo');
-		t.equal(soa.ttl, 60);
+		t.equal(soa.ttl, 30);
 		t.strictEqual(soa.primary, 'foobar');
 		t.strictEqual(soa.admin, 'root.foobar');
 		t.equal(soa.serial, 2);
@@ -158,7 +158,7 @@ test('serves instance A records', function (t) {
 	req.on('message', function (err, answer) {
 		t.error(err);
 		t.equal(answer.answer.length, 1);
-		t.equal(answer.answer[0].ttl, 60);
+		t.equal(answer.answer[0].ttl, 30);
 		t.strictEqual(answer.answer[0].address, '1.2.3.4');
 		t.equal(answer.authority.length, 1);
 		t.equal(answer.authority[0].type,
@@ -290,7 +290,7 @@ test('serves service A records', function (t) {
 		var ttls = answer.answer.map(function (a) {
 			return (a.ttl);
 		});
-		t.deepEqual(ttls, [60, 60]);
+		t.deepEqual(ttls, [30, 30]);
 		var addrs = answer.answer.map(function (a) {
 			return (a.address);
 		}).sort();
@@ -322,7 +322,7 @@ test('serves service TXT records', function (t) {
 		var ttls = answer.answer.map(function (a) {
 			return (a.ttl);
 		});
-		t.deepEqual(ttls, [60, 60]);
+		t.deepEqual(ttls, [30, 30]);
 		var datas = answer.answer.map(function (a) {
 			return (a.data);
 		}).sort();
