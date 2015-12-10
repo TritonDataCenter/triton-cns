@@ -6,11 +6,9 @@
  * Copyright (c) 2015, Joyent, Inc.
  */
 
-var assert = require('assert');
 var redis = require('redis');
 var bunyan = require('bunyan');
 var changefeed = require('changefeed');
-var vasync = require('vasync');
 var ChangefeedFilter = require('./lib/changefeed-filter');
 var UpdateStream = require('./lib/update-stream');
 var FlagFilter = require('./lib/flag-filter');
@@ -61,7 +59,7 @@ cfl.register();
 
 var initialized = false;
 
-function _bootstrap(_, cb) {
+function _bootstrap() {
 	log.trace('_bootstrap');
 
 	if (!initialized) {
@@ -89,30 +87,11 @@ function _bootstrap(_, cb) {
 				setTimeout(reap, 300000);
 			}
 			setTimeout(reap, 15000);
+
+			cfl.pipe(cff);
+			cff.pipe(cnf);
 		}
-		cb();
 	});
 }
 
-function _changefeedInit(_, cb) {
-	log.trace('_changefeedInit');
-	if (!initialized) {
-		cfl.pipe(cff);
-		cff.pipe(cnf);
-	}
-	cb();
-}
-
-cfl.on('bootstrap', function _bootstrapInit(info) {
-	log.trace('_bootstrapInit: start');
-	vasync.pipeline({ 'funcs': [_bootstrap, _changefeedInit] },
-	    function (err, results) {
-		if (err) {
-			log.error({ error: err }, '_bootstrapInit: failed');
-			assert.ifError(err);
-		} else {
-			log.trace('_bootstrapInit: finished');
-			initialized = true;
-		}
-	});
-});
+cfl.on('bootstrap', _bootstrap);
