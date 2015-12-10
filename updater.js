@@ -49,6 +49,11 @@ var cfOpts = {
 	changeKind: {
 		resource: conf.changefeed_opts.resource,
 		subResources: conf.changefeed_opts.subResources
+	},
+	backoff: {
+		maxTimeout: Infinity,
+		minTimeout: 10,
+		retries: Infinity
 	}
 };
 var cfl = changefeed.createListener(cfOpts);
