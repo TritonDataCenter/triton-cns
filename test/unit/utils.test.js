@@ -10,7 +10,7 @@ var test = require('tape').test;
 var sinon = require('sinon');
 var util = require('util');
 
-var utils = require('../lib/utils');
+var utils = require('../../lib/utils');
 
 test('currentSerial', function (t) {
 	var sandbox;

@@ -11,11 +11,11 @@ var sinon = require('sinon');
 var util = require('util');
 var dns = require('native-dns');
 
-var UpdateStream = require('../lib/update-stream');
-var DNSServer = require('../lib/dns-server');
+var UpdateStream = require('../../lib/update-stream');
+var DNSServer = require('../../lib/dns-server');
 var MockRedis = require('./mock-redis');
 
-var utils = require('../lib/utils');
+var utils = require('../../lib/utils');
 
 var sandbox;
 var redis;

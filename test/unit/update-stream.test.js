@@ -10,10 +10,10 @@ var test = require('./test-namer')('UpdateStream');
 var sinon = require('sinon');
 var util = require('util');
 
-var UpdateStream = require('../lib/update-stream');
+var UpdateStream = require('../../lib/update-stream');
 var MockRedis = require('./mock-redis');
 
-var utils = require('../lib/utils');
+var utils = require('../../lib/utils');
 
 var sandbox;
 var currentSerial = 1;
