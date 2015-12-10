@@ -6,6 +6,7 @@
  * Copyright (c) 2015, Joyent, Inc.
  */
 
+var assert = require('assert');
 var redis = require('redis');
 var bunyan = require('bunyan');
 var changefeed = require('changefeed');
@@ -32,6 +33,14 @@ var client = redis.createClient(conf.redis_opts);
 
 var log = bunyan.createLogger({name: 'cns', level: 'trace'});
 
+var ps = new PollerStream({log: log, config: conf});
+var cff = new ChangefeedFilter({log: log, config: conf});
+var cnf = new CNFilter({log: log, config: conf});
+var uf = new UfdsFilter({log: log, config: conf});
+var nf = new NetFilter({log: log, config: conf});
+var ffs = new FlagFilter({log: log, config: conf});
+var s = new UpdateStream({client: client, log: log, config: conf});
+
 var cfOpts = {
 	log: log,
 	url: 'http://' + conf.vmapi_opts.address,
@@ -45,58 +54,60 @@ var cfOpts = {
 var cfl = changefeed.createListener(cfOpts);
 cfl.register();
 
-cfl.on('bootstrap', function _setupPipeline(info) {
-	log.trace('_setupPipeline: start');
-	var ps = new PollerStream({log: log, config: conf});
-	var cnf = new CNFilter({log: log, config: conf});
-	var uf = new UfdsFilter({log: log, config: conf});
-	var nf = new NetFilter({log: log, config: conf});
-	var ffs = new FlagFilter({log: log, config: conf});
-	var s = new UpdateStream({client: client, log: log, config: conf});
-	vasync.pipeline({
-		'funcs': [
-			function _bootstrap(_, cb) {
-				log.trace('_bootstrap');
-				ps.pipe(cnf);
-				cnf.pipe(uf);
-				uf.pipe(nf);
-				nf.pipe(ffs);
-				ffs.pipe(s);
+var initialized = false;
 
-				s.openSerial(false);
-				ps.start();
-				ps.once('pollFinish', function () {
-					log.info(
-					    'first poll done, committing...');
-					s.closeSerial();
+function _bootstrap(_, cb) {
+	log.trace('_bootstrap');
 
-					var rs = new ReaperStream(
-					    {log: log,
-					        config: conf,
-					        client: client});
-					rs.pipe(cnf);
-					function reap() {
-						rs.start();
-						setTimeout(reap, 300000);
-					}
-					setTimeout(reap, 15000);
-					cb();
-				});
-			},
-			function _beginChangefeed(_, cb) {
-				log.trace('_beginChangefeed');
-				var cff = new ChangefeedFilter(
-				    {log: log, config: conf});
-				cfl.pipe(cff);
-				cff.pipe(cnf);
-				cb();
+	if (!initialized) {
+		ps.pipe(cnf);
+		cnf.pipe(uf);
+		uf.pipe(nf);
+		nf.pipe(ffs);
+		ffs.pipe(s);
+		s.openSerial(false);
+	}
+
+	ps.start();
+	ps.once('pollFinish', function () {
+		log.info('Poll done, committing...');
+		if (!initialized) {
+			s.closeSerial();
+
+			var rs = new ReaperStream(
+			    {log: log,
+			        config: conf,
+			        client: client});
+			rs.pipe(cnf);
+			function reap() {
+				rs.start();
+				setTimeout(reap, 300000);
 			}
-		]
-	}, function (err, results) {
+			setTimeout(reap, 15000);
+		}
+		cb();
+	});
+}
+
+function _changefeedInit(_, cb) {
+	log.trace('_changefeedInit');
+	if (!initialized) {
+		cfl.pipe(cff);
+		cff.pipe(cnf);
+	}
+	cb();
+}
+
+cfl.on('bootstrap', function _bootstrapInit(info) {
+	log.trace('_bootstrapInit: start');
+	vasync.pipeline({ 'funcs': [_bootstrap, _changefeedInit] },
+	    function (err, results) {
 		if (err) {
-			log.error({ error: err }, '_setupPipeline: failed');
+			log.error({ error: err }, '_bootstrapInit: failed');
+			assert.ifError(err);
 		} else {
-			log.trace('_setupPipeline: finished');
+			log.trace('_bootstrapInit: finished');
+			initialized = true;
 		}
 	});
 });
