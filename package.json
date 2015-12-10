@@ -17,14 +17,16 @@
   },
   "homepage": "https://github.com/joyent/triton-cns#readme",
   "devDependencies": {
-    "tape": "^4.2.1",
-    "sinon": "^1.17.2",
     "minimatch": "^3.0.0",
-    "native-dns": "^0.7.0"
+    "native-dns": "^0.7.0",
+    "sinon": "^1.17.2",
+    "tape": "^4.2.1"
   },
   "dependencies": {
     "assert-plus": "0.1.5",
     "bunyan": "1.5.1",
+    "dashdash": "1.10.1",
+    "deep-equal": "1.0.1",
     "ipaddr.js": "1.0.3",
     "jsprim": "1.2.2",
     "lru-cache": "2.7.0",
@@ -32,6 +34,7 @@
     "redis": "2.1.0",
     "restify-clients": "1.1.1",
     "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git",
+    "sprintf-js": "^1.0.3",
     "uuid": "2.0.1",
     "vasync": "1.6.3"
   }
