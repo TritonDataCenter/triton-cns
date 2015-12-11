@@ -28,7 +28,8 @@ ISTANBUL	:= ./node_modules/.bin/istanbul
 #
 # Files
 #
-JS_FILES	:= $(shell find lib test *.js -name '*.js')
+JS_FILES	:= $(shell find lib test *.js -name '*.js') \
+		   bin/cnsadm
 JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
@@ -82,6 +83,8 @@ release: all docs $(SMF_MANIFESTS) $(NODE_EXEC)
 	@mkdir -p $(RELSTAGEDIR)/site
 	@touch $(RELSTAGEDIR)/site/.do-not-delete-me
 	cp -r   $(TOP)/boot \
+		$(TOP)/bin \
+		$(TOP)/man \
 		$(TOP)/lib \
 		$(TOP)/node_modules \
 		$(TOP)/package.json \
@@ -95,6 +98,9 @@ release: all docs $(SMF_MANIFESTS) $(NODE_EXEC)
 	cp -r   $(TOP)/build/node \
 		$(RELSTAGEDIR)/root/opt/triton/cns/build/
 	cp -R $(TOP)/node_modules/sdc-scripts/* $(RELSTAGEDIR)/root/opt/smartdc/boot/
+	@mkdir -p $(RELSTAGEDIR)/root/opt/local/bin
+	cp $(TOP)/bin/cmd-wrapper $(RELSTAGEDIR)/root/opt/local/bin/cnsadm
+	cp -r $(TOP)/man $(RELSTAGEDIR)/root/opt/local/
 	cp -R $(TOP)/boot/* $(RELSTAGEDIR)/root/opt/smartdc/boot/
 	(cd $(RELSTAGEDIR) && $(TAR) -jcf $(TOP)/$(RELEASE_TARBALL) root site)
 	@rm -rf $(RELSTAGEDIR)

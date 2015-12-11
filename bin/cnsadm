@@ -1,0 +1,452 @@
+#!/opt/triton/cns/build/node/bin/node
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2015, Joyent, Inc.
+ */
+
+var dashdash = require('dashdash');
+var assert = require('assert-plus');
+var utils = require('../lib/utils');
+var fs = require('fs');
+var restify = require('restify-clients');
+var cmdUtils = require('../lib/cmd-utils');
+var child = require('child_process');
+var sprintf = require('sprintf-js').sprintf;
+var dns = require('native-dns');
+var vasync = require('vasync');
+
+assert.strictEqual(require.main, module);
+
+var argv = process.argv.slice(2);
+var subcommand = argv.shift();
+while (subcommand && subcommand[0] === '-')
+	subcommand = argv.shift();
+
+/* Add base options for all subcommands. */
+var options = [
+	{
+		names: ['help', 'h'],
+		type: 'bool',
+		help: 'Shows this help text'
+	}
+];
+
+/* Add subcommand-specific options. */
+switch (subcommand) {
+case 'zones':
+	options.push({
+		names: ['add', 'a'],
+		type: 'bool',
+		help: 'Add the given zone as a new entry'
+	});
+	options.push({
+		names: ['delete', 'd'],
+		type: 'bool',
+		help: 'Remove a zone by the given name'
+	});
+	break;
+default:
+	break;
+}
+
+var parser = dashdash.createParser({
+	options: options
+});
+
+try {
+	var opts = parser.parse(process.argv);
+} catch (e) {
+	console.error('cnsadm: error: %s', e.message);
+	process.exit(1);
+}
+
+if (opts.help || !subcommand) {
+	var help = parser.help({}).trimRight();
+	console.error('cnsadm: tool for administering CNS');
+	console.error('\nsubcommands:');
+	console.error('  cnsadm status');
+	console.error('  cnsadm config');
+	console.error('  cnsadm config [modifiers]');
+	console.error('  cnsadm zones');
+	console.error('  cnsadm zones <zonename> [modifiers]');
+	console.error('  cnsadm zones [-a|-d] <zonename> [modifiers]');
+	console.error('\nmodifiers:');
+	console.error('  field=value');
+	console.error('  field+=value (only for arrays)');
+	console.error('  field-=value (only for arrays)');
+	console.error('\noptions:');
+	console.error(help);
+	process.exit(1);
+}
+
+var zoneName = child.spawnSync('zonename', []).stdout;
+if (Buffer.isBuffer(zoneName))
+	zoneName = zoneName.toString('ascii');
+zoneName = zoneName.trim();
+
+var mdataRet = child.spawnSync('mdata-get', ['sapi-url']);
+if (mdataRet.status !== 0) {
+	console.error('cnsadm: error: mdata-get failed to retrieve SAPI url');
+	process.exit(1);
+}
+var sapiUrl = mdataRet.stdout;
+if (Buffer.isBuffer(sapiUrl))
+	sapiUrl = sapiUrl.toString('ascii');
+sapiUrl = sapiUrl.trim();
+
+var sapi = restify.createJsonClient({
+	url: sapiUrl
+});
+
+var config = JSON.parse(
+    fs.readFileSync('/opt/triton/cns/etc/config.json').toString('utf-8'));
+
+var args = opts._args;
+assert.strictEqual(subcommand, args.shift());
+
+var service;
+
+sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
+	if (err) {
+		console.error('cnsadm: error: failed to communicate with ' +
+		    'SAPI: %s', err.message);
+		process.exit(1);
+	}
+
+	assert.object(obj.metadata);
+	Object.keys(config).forEach(function (k) {
+		config[k] = obj.metadata[k] || config[k];
+	});
+
+	sapi.get('/services?name=cns', function (err2, req2, res2, objs) {
+		if (err2) {
+			console.error('cnsadm: error: failed to communicate ' +
+			    'with SAPI: %s', err2.message);
+			process.exit(1);
+		}
+
+		assert.arrayOfObject(objs);
+		assert.strictEqual(objs.length, 1);
+		service = objs[0].uuid;
+
+		switch (subcommand) {
+		case 'config':
+			do_config();
+			break;
+		case 'zones':
+			do_zones();
+			break;
+		case 'status':
+			do_status();
+			break;
+		default:
+			console.error('cnsadm: error: unknown subcommand "%s"',
+			    subcommand);
+			process.exit(1);
+			break;
+		}
+	});
+});
+
+function do_config() {
+	var schema = {
+	    type: 'object',
+	    properties: {
+		'my_name': {
+		    type: 'string',
+		    help: 'zone master hostname, SOA mname'
+		},
+		'hostmaster': {
+		    type: 'string',
+		    help: 'email contact'
+		},
+		'use_login': {
+		    type: 'boolean',
+		    help: 'use user login in DNS names'
+		},
+		'use_alias': {
+		    type: 'boolean',
+		    help: 'use VM aliases in DNS names'
+		},
+		'allow_transfer': {
+		    type: 'array',
+		    items: {
+			type: 'string'
+		    },
+		    help: 'IPs allowed to use AXFR/IXFR'
+		}
+	    }
+	};
+	if (config.allow_transfer.indexOf('127.0.0.1') === -1)
+		config.allow_transfer.push('127.0.0.1');
+	if (args.length === 0) {
+		cmdUtils.printFromSchema(config, schema);
+		process.exit(0);
+	}
+	var changes = cmdUtils.parseModifiers(args, config, schema);
+	if (changes.allow_transfer) {
+		var desired = changes.allow_transfer;
+		var found = false;
+		changes.allow_transfer = [];
+		desired.forEach(function (ipMask) {
+			if (ipMask === '127.0.0.1') {
+				found = true;
+				return;
+			}
+			changes.allow_transfer.push(ipMask);
+		});
+		if (found === false) {
+			console.error('cnsadm: error: 127.0.0.1 ' +
+			    'cannot be removed from allow_transfer');
+			process.exit(1);
+		}
+	}
+	changes = {metadata: changes};
+	sapi.put('/services/' + service, changes,
+	    function (err, req, res, obj) {
+		if (err) {
+			console.error('cnsadm: error writing to ' +
+			    'SAPI: ' + err.message);
+			process.exit(1);
+		}
+	});
+}
+
+function do_zones() {
+	if (args.length === 0) {
+		var columns = [
+		    {field: 'zone'},
+		    {field: 'networks', stringify: function (v) {
+			v = v || [];
+			if (v.length === 1 && v[0] === '*')
+				return ('*');
+			if (v.length === 0)
+				return ('');
+			return (sprintf('(%d UUIDs)', v.length));
+		    }},
+		    {field: 'slaves', stringify: function (v) {
+			return ((v || []).join(','));
+		    }},
+		    {field: 'hidden_master', title: 'hidden master',
+			type: 'boolean'}
+		];
+		var objs = Object.keys(config.forward_zones).map(function (z) {
+			var obj = config.forward_zones[z];
+			obj.zone = z;
+			return (obj);
+		});
+		var rev = config.reverse_zones;
+		rev.zone = '(ip-reverse-lookup)';
+		objs.push(rev);
+		cmdUtils.printTable(columns, objs);
+		process.exit(0);
+	}
+	var zone = args.shift();
+	var zobj;
+	if (zone === 'ip-reverse-lookup' || zone === 'reverse') {
+		zone = 'reverse';
+		zobj = config.reverse_zones;
+		if (zobj)
+			zobj.zone = '(ip-reverse-lookup)';
+	} else {
+		zobj = config.forward_zones[zone];
+		if (zobj)
+			zobj.zone = zone;
+	}
+	if (!zobj) {
+		if (opts.add) {
+			zobj = {zone: zone};
+			config.forward_zones[zone] = zobj;
+		} else {
+			console.error('cnsadm: error: invalid zone "%s", ' +
+			    'did you mean to use -a?', zone);
+			process.exit(1);
+		}
+	}
+	var schema = {
+	    type: 'object',
+	    properties: {
+		'zone': {type: 'string'},
+		'networks': {
+		    type: 'array',
+		    items: {type: 'string'}
+		},
+		'slaves': {
+		    type: 'array',
+		    items: {type: 'string'}
+		},
+		'hidden_master': {type: 'boolean'}
+	    }
+	};
+	if (args.length === 0 && !opts['delete']) {
+		cmdUtils.printFromSchema(zobj, schema);
+		process.exit(0);
+	}
+	var changes = cmdUtils.parseModifiers(args, zobj, schema);
+	delete (zobj.zone);
+	Object.keys(changes).forEach(function (k) {
+		zobj[k] = changes[k];
+	});
+
+	if (opts['delete'])
+		delete (config.forward_zones[zone]);
+
+	if (zone === 'reverse') {
+		changes = {metadata: {reverse_zones: config.reverse_zones}};
+	} else {
+		changes = {metadata: {forward_zones: config.forward_zones}};
+	}
+
+	sapi.put('/services/' + service, changes,
+	    function (err, req, res, obj) {
+		if (err) {
+			console.error('cnsadm: error writing to ' +
+			    'SAPI: ' + err.message);
+			process.exit(1);
+		}
+	});
+}
+
+function do_status() {
+	var zones = {};
+	var slaves = {};
+
+	function listZones(_, cb) {
+		var q = dns.Question({
+			name: 'zones._cns_meta',
+			type: 'TXT'
+		});
+		var req = dns.Request({
+			question: q,
+			server: { address: '127.0.0.1', type: 'udp' },
+			timeout: 1000
+		});
+		req.on('message', function (err, answer) {
+			answer.answer.forEach(function (rec) {
+				zones[rec.data[0]] = {
+					zone: rec.data[0]
+				};
+			});
+		});
+		req.once('end', function () {
+			cb();
+		});
+		req.send();
+	}
+
+	function getZoneSoas(_, cb) {
+		function getZoneSoa(zone, ccb) {
+			var q = dns.Question({
+				name: zone,
+				type: 'SOA'
+			});
+			var req = dns.Request({
+				question: q,
+				server: { address: '127.0.0.1', type: 'udp' },
+				timeout: 1000
+			});
+			req.on('message', function (err, answer) {
+				zones[zone].serial = answer.answer[0].serial;
+			});
+			req.once('end', function () {
+				ccb();
+			});
+			req.send();
+		}
+		vasync.forEachParallel({
+			func: getZoneSoa,
+			inputs: Object.keys(zones)
+		}, function (err, res) {
+			cb(err);
+		});
+	}
+
+	function getSlaves(_, cb) {
+		var q = dns.Question({
+			name: 'slaves._cns_meta',
+			type: 'SOA'
+		});
+		var req = dns.Request({
+			question: q,
+			server: { address: '127.0.0.1', type: 'udp' },
+			timeout: 1000
+		});
+		req.on('message', function (err, answer) {
+			answer.answer.forEach(function (rec) {
+				if (slaves[rec.admin] === undefined)
+					slaves[rec.admin] = {
+					     slave: rec.admin,
+					     zones: {}
+					};
+				slaves[rec.admin].zones[rec.primary] =
+				    rec.serial;
+			});
+		});
+		req.once('end', function () {
+			cb();
+		});
+		req.send();
+	}
+
+	vasync.pipeline({
+		funcs: [listZones, getZoneSoas, getSlaves]
+	}, function (err, res) {
+		if (err) {
+			console.error('cnsadm: error communicating with ' +
+			    'CNS server: ' + err.message);
+			process.exit(1);
+		}
+
+		var serial = utils.currentSerial();
+		var columns = [
+		    {field: 'zone'},
+		    {field: 'serial', title: 'latest serial'},
+		    {field: 'serial', title: 'changed',
+			stringify: function (v) {
+				return (cmdUtils.timeUnits((serial - v) * 10) +
+				    ' ago');
+			}}
+		];
+		var rows = Object.keys(zones).map(function (k) {
+			return (zones[k]);
+		});
+		cmdUtils.printTable(columns, rows);
+		console.log('');
+
+		columns = [
+			{field: 'slave'},
+			{field: 'zone'},
+			{field: 'serial', title: 'latest serial'},
+			{field: 'drift'}
+		];
+		rows = [];
+		Object.keys(slaves).forEach(function (slave) {
+			var sobj = slaves[slave];
+			var first = true;
+			Object.keys(sobj.zones).forEach(function (zone) {
+				var slaveSerial = sobj.zones[zone];
+				var latestSerial = zones[zone].serial;
+				var delta = latestSerial - slaveSerial;
+				var row = {};
+				row.slave = '';
+				if (first)
+					row.slave = slave;
+				row.zone = zone;
+				row.serial = slaveSerial;
+				row.drift = '';
+				if (delta != 0) {
+					var ago = cmdUtils.timeUnits(
+					    Math.abs(delta) * 10);
+					row.drift = sprintf('%s (%d Sx)',
+					    ago, delta);
+				}
+				rows.push(row);
+				first = false;
+			});
+		});
+		cmdUtils.printTable(columns, rows);
+	});
+}

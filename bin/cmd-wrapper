@@ -1,0 +1,3 @@
+#!/bin/sh
+SCRIPTNAME="$(basename "$0")"
+exec "/opt/triton/cns/bin/${SCRIPTNAME}" "$@"
