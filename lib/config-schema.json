@@ -122,6 +122,24 @@
         }
       },
       "additionalProperties": false
+    },
+    "changefeed_opts": {
+        "type": "object",
+        "required": true,
+        "properties": {
+            "resource": {
+                "type": "string",
+                "required": true
+            },
+            "subResources": {
+                "type": "array",
+                "required": true
+            },
+            "instance": {
+                "type": "string",
+                "required": true
+            }
+        }
     }
   }
 }
