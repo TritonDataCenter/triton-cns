@@ -119,6 +119,12 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 	}
 
 	assert.object(obj.metadata);
+
+	/* Hack to make up for the SAPI template adding this. */
+	if (obj.metadata.allow_transfer &&
+	    obj.metadata.allow_transfer.indexOf('127.0.0.1') === -1)
+		obj.metadata.allow_transfer.push('127.0.0.1');
+
 	Object.keys(config).forEach(function (k) {
 		if (obj.metadata.hasOwnProperty(k)) {
 			if (!deepEquals(config[k], obj.metadata[k]))
@@ -186,8 +192,6 @@ function do_config() {
 		}
 	    }
 	};
-	if (config.allow_transfer.indexOf('127.0.0.1') === -1)
-		config.allow_transfer.push('127.0.0.1');
 	if (args.length === 0) {
 		cmdUtils.printFromSchema(config, schema, waiting);
 		process.exit(0);
