@@ -17,6 +17,7 @@ var child = require('child_process');
 var sprintf = require('sprintf-js').sprintf;
 var dns = require('native-dns');
 var vasync = require('vasync');
+var deepEquals = require('deep-equal');
 
 assert.strictEqual(require.main, module);
 
@@ -108,6 +109,7 @@ var args = opts._args;
 assert.strictEqual(subcommand, args.shift());
 
 var service;
+var waiting = {};
 
 sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 	if (err) {
@@ -118,7 +120,11 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 
 	assert.object(obj.metadata);
 	Object.keys(config).forEach(function (k) {
-		config[k] = obj.metadata[k] || config[k];
+		if (obj.metadata.hasOwnProperty(k)) {
+			if (!deepEquals(config[k], obj.metadata[k]))
+				waiting[k] = true;
+			config[k] = obj.metadata[k];
+		}
 	});
 
 	sapi.get('/services?name=cns', function (err2, req2, res2, objs) {
@@ -183,7 +189,7 @@ function do_config() {
 	if (config.allow_transfer.indexOf('127.0.0.1') === -1)
 		config.allow_transfer.push('127.0.0.1');
 	if (args.length === 0) {
-		cmdUtils.printFromSchema(config, schema);
+		cmdUtils.printFromSchema(config, schema, waiting);
 		process.exit(0);
 	}
 	var changes = cmdUtils.parseModifiers(args, config, schema);
