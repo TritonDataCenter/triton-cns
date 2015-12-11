@@ -59,39 +59,59 @@ cfl.register();
 
 var initialized = false;
 
+function _setupMainPipes() {
+	ps.pipe(cnf);
+	cnf.pipe(uf);
+	uf.pipe(nf);
+	nf.pipe(ffs);
+	ffs.pipe(s);
+	s.openSerial(false);
+}
+
+function _setupReaper() {
+	var rs = new ReaperStream({log: log, config: conf, client: client});
+	rs.pipe(cnf);
+	function reap() {
+		rs.start();
+		setTimeout(reap, 300000);
+	}
+	setTimeout(reap, 15000);
+}
+
 function _bootstrap() {
 	log.trace('_bootstrap');
 
-	if (!initialized) {
-		ps.pipe(cnf);
-		cnf.pipe(uf);
-		uf.pipe(nf);
-		nf.pipe(ffs);
-		ffs.pipe(s);
-		s.openSerial(false);
-	}
+	if (!initialized)
+		_setupMainPipes();
 
 	ps.start();
 	ps.once('pollFinish', function () {
 		log.info('Poll done, committing...');
 		if (!initialized) {
 			s.closeSerial();
-
-			var rs = new ReaperStream(
-			    {log: log,
-			        config: conf,
-			        client: client});
-			rs.pipe(cnf);
-			function reap() {
-				rs.start();
-				setTimeout(reap, 300000);
-			}
-			setTimeout(reap, 15000);
-
+			_setupReaper();
 			cfl.pipe(cff);
 			cff.pipe(cnf);
+			initialized = true;
 		}
 	});
 }
 
+function _fallback() {
+	_setupMainPipes();
+	ps.start();
+	ps.once('pollFinish', function () {
+		log.info('First poll done, committing...');
+		s.closeSerial();
+
+		function poll() {
+			ps.start();
+			setTimeout(poll, 10000);
+		}
+		setTimeout(poll, 10000);
+		_setupReaper();
+	});
+}
+
 cfl.on('bootstrap', _bootstrap);
+cfl.on('error', _fallback);
