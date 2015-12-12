@@ -89,12 +89,12 @@ test('recSetDiff', function (t) {
 
 	b.push({constructor: 'TXT', args: ['foo']});
 	diff = utils.recSetDiff(a, b);
-	t.deepEqual(diff.add, [{constructor: 'TXT', args: ['foo']}]);
+	t.deepEqual(diff.add, [ {constructor: 'TXT', args: ['foo']} ]);
 	t.deepEqual(diff.remove, []);
 
 	a.push({constructor: 'TXT', args: ['bar'], id: 'test'});
 	diff = utils.recSetDiff(a, b);
-	t.deepEqual(diff.add, [{constructor: 'TXT', args: ['foo']}]);
+	t.deepEqual(diff.add, [ {constructor: 'TXT', args: ['foo']} ]);
 	t.deepEqual(diff.remove, [
 	    {constructor: 'TXT', args: ['bar'], id: 'test'}]);
 
