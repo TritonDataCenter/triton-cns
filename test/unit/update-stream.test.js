@@ -202,7 +202,7 @@ test('incrementals are generated correctly', function (t) {
 		return (JSON.parse(r));
 	});
 
-	t.equal(rmRecs.length, 2);
+	t.equal(rmRecs.length, 1);
 	var notNamed = rmRecs.filter(function (r) {
 		return (r.name !== 'abc123.inst.def432');
 	});
@@ -218,7 +218,7 @@ test('incrementals are generated correctly', function (t) {
 		return (JSON.parse(r));
 	});
 
-	t.equal(addRecs.length, 2);
+	t.equal(addRecs.length, 1);
 	notNamed = addRecs.filter(function (r) {
 		return (r.name !== 'abc123.inst.def432');
 	});

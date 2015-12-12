@@ -70,3 +70,41 @@ test('reverseZoneIp for ipv6', function (t) {
 	t.strictEqual(ret.zone, 'a.f.e.d.4.3.2.1.d.c.b.a.7.0.6.2.ip6.arpa');
 	t.end();
 });
+
+test('recSetDiff', function (t) {
+	var diff;
+	var a, b;
+
+	a = [
+	    {constructor: 'A', args: ['1.2.3.4'], id: 'foo'},
+	    {constructor: 'A', args: ['1.2.3.5'], id: 'bar'}
+	];
+	b = [
+	    {constructor: 'A', args: ['1.2.3.4']},
+	    {constructor: 'A', args: ['1.2.3.5']}
+	];
+	diff = utils.recSetDiff(a, b);
+	t.deepEqual(diff.add, []);
+	t.deepEqual(diff.remove, []);
+
+	b.push({constructor: 'TXT', args: ['foo']});
+	diff = utils.recSetDiff(a, b);
+	t.deepEqual(diff.add, [{constructor: 'TXT', args: ['foo']}]);
+	t.deepEqual(diff.remove, []);
+
+	a.push({constructor: 'TXT', args: ['bar'], id: 'test'});
+	diff = utils.recSetDiff(a, b);
+	t.deepEqual(diff.add, [{constructor: 'TXT', args: ['foo']}]);
+	t.deepEqual(diff.remove, [
+	    {constructor: 'TXT', args: ['bar'], id: 'test'}]);
+
+	diff = utils.recSetDiff(a, []);
+	t.deepEqual(diff.add, []);
+	t.deepEqual(diff.remove, a);
+
+	diff = utils.recSetDiff([], a);
+	t.deepEqual(diff.add, a);
+	t.deepEqual(diff.remove, []);
+
+	t.end();
+});
