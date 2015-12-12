@@ -4,11 +4,114 @@
 cnsadm \- administer the Triton CNS
 .SH SYNOPSIS
 .PP
+.B cnsadm
+status
+.PP
+.B cnsadm
+config
+.PP
+.B cnsadm
+config [\fImodifiers\fR]
+.PP
+.B cnsadm
+zones
+.PP
+.B cnsadm
+zones <\fIzone\fR> [\fImodifiers\fR]
+.PP
+.B cnsadm
+zones [\fB\-a|\-d\fR] <\fIzone\fR> [\fImodifiers\fR]
 .SH DESCRIPTION
 .PP
+The \fBcnsadm\fR tool is used to administer the Triton Container Naming
+Service (CNS).
+It gives a simple interface to view and edit CNS' SAPI configuration, as well
+as view information about the server's operation.
+.PP
+CNS is a DNS server which automatically generates records based on the contents
+of SDC: in particular, it uses information about VMs from VMAPI as well as
+\fBtags\fR and \fBmetadata\fR to decide what records to generate, as well as
+its own service configuration in SAPI.
+.PP
+DNS has a lot of internal terminology that should be understood before
+undertaking any production deployment of this system. In particular, an
+understanding of the DNS master and slave topology, zone transfers and NOTIFY,
+as well as zone delegation and glue records, may prove important in
+correctly configuring CNS.
+.PP
+There are 3 key modes that CNS can be deployed in:
+.PP
+.B Standalone
+mode: is the default mode of operation, where CNS serves records as an
+authoritative nameserver. CNS must be given an external IP address and the
+DNS zones delegated to it by adding NS glue records to their parent zone.
+.PP
+.B Master
+mode: functions identically to Standalone mode, except that CNS is also 
+configured to allow zone transfers to, and send NOTIFY messages to, some set
+of slave nameservers. The slave servers stay in sync with CNS using
+(incremental) zone transfers and serve the same records it does.
+.PP
+.B Hidden Master
+mode: does not require CNS to be exposed to clients directly. Instead, a set of
+slave nameservers serve the clients on its behalf after having synchronized the
+DNS records (over some private network) from it using zone transfers. One of the
+slaves is designated as the "visible master" and its name is listed on SOA
+records as the master of the zone instead of CNS.
+.PP
+In both Standalone and Master mode, CNS must know a publically-resolvable
+DNS name for its own external address. To use these modes, all that is needed
+from a clean install is to set this name and then change the name of the default
+DNS zone as needed (see \fBExamples\fR, below).
+.PP
+Then, one may add slave nameservers for Master mode operation, by adding them
+both to the config option \fBallow_transfer\fR and to the list of zone
+\fBslaves\fR.
+.PP
+To use Hidden Master mode, one must set \fBhidden_master\fR to \fItrue\fR, as
+well as configuring the options listed for Standalone and Master modes above.
 .SH EXAMPLES
 .PP
-.SH OPTIONS
+Show the current configuration:
+.PP
+.nf
+.RS
+$ cnsadm config
+$ cnsadm zones
+.RE
+.fi
+.PP
+To set up Standalone or Master mode, and change the domain being served from
+the default \fIdc.sdc.domain\fR (based on the information you supplied during
+SDC setup) to our custom subdomain:
+.PP
+.nf
+.RS
+$ cnsadm config my_name=\fIpublic.hostname.com\fR \\
+                hostmaster=\fIhostmaster@hostname.com\fR
+$ cnsadm zones -d dc.sdc.domain
+$ cnsadm zones -a \fIcns.hostname.com\fR networks=*
+.RE
+.fi
+.PP
+Add two slave nameservers:
+.PP
+.nf
+.RS
+$ cnsadm config allow_transfer+=\fI192.168.5.2\fR,\fI192.168.6.2\fR
+$ cnsadm zones \fIcns.hostname.com\fR \\
+               slaves+=\fIns0.hostname.com\fR,\fIns1.hostname.com\fR
+.RE
+.fi
+.PP
+And then change to Hidden Master mode:
+.PP
+.nf
+.RS
+$ cnsadm zones \fIcns.hostname.com\fR hidden_master=true
+.RE
+.fi
+.SH SUBCOMMANDS
 .PP
 .SH BUGS
 .PP
