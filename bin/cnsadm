@@ -444,21 +444,27 @@ function do_status() {
 			var sobj = slaves[slave];
 			var first = true;
 			Object.keys(sobj.zones).forEach(function (zone) {
-				var slaveSerial = sobj.zones[zone];
-				var latestSerial = zones[zone].serial;
-				var delta = latestSerial - slaveSerial;
 				var row = {};
 				row.slave = '';
 				if (first)
 					row.slave = slave;
 				row.zone = zone;
+				var slaveSerial = sobj.zones[zone];
 				row.serial = slaveSerial;
 				row.drift = '';
-				if (delta != 0) {
-					var ago = cmdUtils.timeUnits(
-					    Math.abs(delta) * 10);
-					row.drift = sprintf('%s (%d Sx)',
-					    ago, delta);
+
+				if (zones[zone] &&
+				    zones[zone].serial !== undefined) {
+					var latestSerial = zones[zone].serial;
+					var delta = latestSerial - slaveSerial;
+					if (delta != 0) {
+						var ago = cmdUtils.timeUnits(
+						    Math.abs(delta) * 10);
+						row.drift = sprintf(
+						    '%s (%d Sx)', ago, delta);
+					}
+				} else {
+					row.drift = '???';
 				}
 				rows.push(row);
 				first = false;
