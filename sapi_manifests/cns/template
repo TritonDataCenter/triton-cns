@@ -15,7 +15,7 @@
 	"forward_zones": {{{forward_zones}}},
 {{/forward_zones}}{{^forward_zones}}
 	"forward_zones": {
-		"{{{datacenter_name}}}.{{{dns_domain}}}": {
+		"{{{datacenter_name}}}.cns.{{{dns_domain}}}": {
 			"networks": ["*"]
 		}
 	},
