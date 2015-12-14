@@ -89,8 +89,7 @@ SDC setup) to our custom subdomain:
 .RS
 $ cnsadm config my_name=\fIpublic.hostname.com\fR \\
                 hostmaster=\fIhostmaster@hostname.com\fR
-$ cnsadm zones -d dc.sdc.domain
-$ cnsadm zones -a \fIcns.hostname.com\fR networks=*
+$ cnsadm zones dc.sdc.domain zone=\fIcns.hostname.com\fR
 .RE
 .fi
 .PP

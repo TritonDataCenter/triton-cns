@@ -296,6 +296,13 @@ function do_zones() {
 		process.exit(0);
 	}
 	var changes = cmdUtils.parseModifiers(args, zobj, schema);
+	/* Detect a rename operation */
+	if (changes.zone !== undefined && changes.zone !== zobj.zone &&
+	    zone !== 'reverse') {
+		delete (config.forward_zones[zone]);
+		config.forward_zones[changes.zone] = zobj;
+	}
+	delete (changes.zone);
 	delete (zobj.zone);
 	Object.keys(changes).forEach(function (k) {
 		zobj[k] = changes[k];
