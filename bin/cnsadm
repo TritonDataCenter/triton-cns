@@ -18,6 +18,7 @@ var sprintf = require('sprintf-js').sprintf;
 var dns = require('native-dns');
 var vasync = require('vasync');
 var deepEquals = require('deep-equal');
+var jsprim = require('jsprim');
 
 assert.strictEqual(require.main, module);
 
@@ -102,8 +103,13 @@ var sapi = restify.createJsonClient({
 	url: sapiUrl
 });
 
+var SCHEMA = JSON.parse(
+    fs.readFileSync('/opt/triton/cns/lib/config-schema.json').
+    toString('utf-8'));
+
 var config = JSON.parse(
-    fs.readFileSync('/opt/triton/cns/etc/config.json').toString('utf-8'));
+    fs.readFileSync('/opt/triton/cns/etc/config.json').
+    toString('utf-8'));
 
 var args = opts._args;
 assert.strictEqual(subcommand, args.shift());
@@ -132,6 +138,14 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 			config[k] = obj.metadata[k];
 		}
 	});
+
+	var verr = jsprim.validateJsonObject(SCHEMA, config);
+	if (verr !== null) {
+		console.error('cnsadm: error: current config is invaild, ' +
+		    'cowardly refusing to do anything. error: ' + verr.name +
+		    ': ' + verr.message);
+		process.exit(2);
+	}
 
 	sapi.get('/services?name=cns', function (err2, req2, res2, objs) {
 		if (err2) {
@@ -213,6 +227,19 @@ function do_config() {
 			    'cannot be removed from allow_transfer');
 			process.exit(1);
 		}
+	}
+	var newConfig = {};
+	Object.keys(config).forEach(function (k) {
+		newConfig[k] = config[k];
+	});
+	Object.keys(changes).forEach(function (k) {
+		newConfig[k] = changes[k];
+	});
+	var verr = jsprim.validateJsonObject(SCHEMA, newConfig);
+	if (verr !== null) {
+		console.error('cnsadm: new configuration failed to ' +
+		    'validate: ' + verr.message);
+		process.exit(2);
 	}
 	changes = {metadata: changes};
 	sapi.put('/services/' + service, changes,
@@ -315,6 +342,20 @@ function do_zones() {
 		changes = {metadata: {reverse_zones: config.reverse_zones}};
 	} else {
 		changes = {metadata: {forward_zones: config.forward_zones}};
+	}
+
+	var newConfig = {};
+	Object.keys(config).forEach(function (k) {
+		newConfig[k] = config[k];
+	});
+	Object.keys(changes.metadata).forEach(function (k) {
+		newConfig[k] = changes.metadata[k];
+	});
+	var verr = jsprim.validateJsonObject(SCHEMA, newConfig);
+	if (verr !== null) {
+		console.error('cnsadm: new configuration failed to ' +
+		    'validate: ' + verr.message);
+		process.exit(2);
 	}
 
 	sapi.put('/services/' + service, changes,
