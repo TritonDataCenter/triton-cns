@@ -264,10 +264,10 @@ function do_zones() {
 				return ('');
 			return (sprintf('(%d UUIDs)', v.length));
 		    }},
-		    {field: 'slaves', stringify: function (v) {
+		    {field: 'peers', stringify: function (v) {
 			return ((v || []).join(','));
 		    }},
-		    {field: 'hidden_master', title: 'hidden master',
+		    {field: 'hidden_primary', title: 'hidden primary',
 			type: 'boolean'}
 		];
 		var objs = Object.keys(config.forward_zones).map(function (z) {
@@ -311,11 +311,11 @@ function do_zones() {
 		    type: 'array',
 		    items: {type: 'string'}
 		},
-		'slaves': {
+		'peers': {
 		    type: 'array',
 		    items: {type: 'string'}
 		},
-		'hidden_master': {type: 'boolean'}
+		'hidden_primary': {type: 'boolean'}
 	    }
 	};
 	if (args.length === 0 && !opts['delete']) {
@@ -370,7 +370,7 @@ function do_zones() {
 
 function do_status() {
 	var zones = {};
-	var slaves = {};
+	var peers = {};
 
 	function listZones(_, cb) {
 		var q = dns.Question({
@@ -422,9 +422,9 @@ function do_status() {
 		});
 	}
 
-	function getSlaves(_, cb) {
+	function getPeers(_, cb) {
 		var q = dns.Question({
-			name: 'slaves._cns_meta',
+			name: 'peers._cns_meta',
 			type: 'SOA'
 		});
 		var req = dns.Request({
@@ -434,12 +434,12 @@ function do_status() {
 		});
 		req.on('message', function (err, answer) {
 			answer.answer.forEach(function (rec) {
-				if (slaves[rec.admin] === undefined)
-					slaves[rec.admin] = {
-					     slave: rec.admin,
+				if (peers[rec.admin] === undefined)
+					peers[rec.admin] = {
+					     peer: rec.admin,
 					     zones: {}
 					};
-				slaves[rec.admin].zones[rec.primary] =
+				peers[rec.admin].zones[rec.primary] =
 				    rec.serial;
 			});
 		});
@@ -450,7 +450,7 @@ function do_status() {
 	}
 
 	vasync.pipeline({
-		funcs: [listZones, getZoneSoas, getSlaves]
+		funcs: [listZones, getZoneSoas, getPeers]
 	}, function (err, res) {
 		if (err) {
 			console.error('cnsadm: error communicating with ' +
@@ -475,29 +475,29 @@ function do_status() {
 		console.log('');
 
 		columns = [
-			{field: 'slave'},
+			{field: 'peer'},
 			{field: 'zone'},
 			{field: 'serial', title: 'latest serial'},
 			{field: 'drift'}
 		];
 		rows = [];
-		Object.keys(slaves).forEach(function (slave) {
-			var sobj = slaves[slave];
+		Object.keys(peers).forEach(function (peer) {
+			var sobj = peers[peer];
 			var first = true;
 			Object.keys(sobj.zones).forEach(function (zone) {
 				var row = {};
-				row.slave = '';
+				row.peer = '';
 				if (first)
-					row.slave = slave;
+					row.peer = peer;
 				row.zone = zone;
-				var slaveSerial = sobj.zones[zone];
-				row.serial = slaveSerial;
+				var peerSerial = sobj.zones[zone];
+				row.serial = peerSerial;
 				row.drift = '';
 
 				if (zones[zone] &&
 				    zones[zone].serial !== undefined) {
 					var latestSerial = zones[zone].serial;
-					var delta = latestSerial - slaveSerial;
+					var delta = latestSerial - peerSerial;
 					if (delta != 0) {
 						var ago = cmdUtils.timeUnits(
 						    Math.abs(delta) * 10);
