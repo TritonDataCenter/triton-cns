@@ -75,6 +75,7 @@ if (opts.help || !subcommand) {
 	console.error('  cnsadm zones');
 	console.error('  cnsadm zones <zonename> [modifiers]');
 	console.error('  cnsadm zones [-a|-d] <zonename> [modifiers]');
+	console.error('  cnsadm upgrade');
 	console.error('\nmodifiers:');
 	console.error('  field=value');
 	console.error('  field+=value (only for arrays)');
@@ -140,7 +141,7 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 	});
 
 	var verr = jsprim.validateJsonObject(SCHEMA, config);
-	if (verr !== null) {
+	if (verr !== null && subcommand !== 'upgrade') {
 		console.error('cnsadm: error: current config is invaild, ' +
 		    'cowardly refusing to do anything. error: ' + verr.name +
 		    ': ' + verr.message);
@@ -167,6 +168,9 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 			break;
 		case 'status':
 			do_status();
+			break;
+		case 'upgrade':
+			do_upgrade();
 			break;
 		default:
 			console.error('cnsadm: error: unknown subcommand "%s"',
@@ -512,5 +516,63 @@ function do_status() {
 			});
 		});
 		cmdUtils.printTable(columns, rows);
+	});
+}
+
+function do_upgrade() {
+	var didCns46 = false;
+
+	function upgradeZone(zobj) {
+		if (zobj.hasOwnProperty('slaves')) {
+			didCns46 = true;
+			zobj.peers = zobj.slaves;
+			delete (zobj.slaves);
+		}
+		if (zobj.hasOwnProperty('hidden_master')) {
+			didCns46 = true;
+			zobj.hidden_primary = zobj.hidden_master;
+			delete (zobj.hidden_master);
+		}
+		return (zobj);
+	}
+
+	var changes = {};
+	changes.reverse_zones = upgradeZone(config.reverse_zones);
+	changes.forward_zones = {};
+	Object.keys(config.forward_zones).forEach(function (z) {
+		var zobj = config.forward_zones[z];
+		changes.forward_zones[z] = upgradeZone(zobj);
+	});
+
+	var newConfig = {};
+	Object.keys(config).forEach(function (k) {
+		newConfig[k] = config[k];
+	});
+	Object.keys(changes).forEach(function (k) {
+		newConfig[k] = changes[k];
+	});
+
+	if (didCns46)
+		console.log('upgrading configuration past CNS-46...');
+
+	if (!didCns46) {
+		console.error('no schema upgrades required');
+		process.exit(0);
+	}
+
+	var verr = jsprim.validateJsonObject(SCHEMA, newConfig);
+	if (verr !== null) {
+		console.error('cnsadm: new configuration failed to ' +
+		    'validate: ' + verr.message);
+		process.exit(2);
+	}
+	changes = {metadata: changes};
+	sapi.put('/services/' + service, changes,
+	    function (err, req, res, obj) {
+		if (err) {
+			console.error('cnsadm: error writing to ' +
+			    'SAPI: ' + err.message);
+			process.exit(1);
+		}
 	});
 }
