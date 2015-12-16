@@ -75,7 +75,7 @@ OUTPUT_DIR=/var/tmp/${API}test
 TAPE=$TOP/node_modules/.bin/tape
 FAILING_LIST=$OUTPUT_DIR/failing-tests.txt
 
-ZONENAME=$(zonename)
+export ZONENAME=$(zonename)
 if [ "$ZONENAME" = "global" ]; then
     function alias2ip {
         alias="$1"
