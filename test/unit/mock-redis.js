@@ -69,6 +69,23 @@ MockRedis.prototype.hset = function (key, quay, val, cb) {
 	if (cb)
 		cb(null);
 };
+MockRedis.prototype.lrange = function (key, from, to, cb) {
+	assert.string(key, 'key');
+	assert.number(from, 'from');
+	assert.number(to, 'to');
+	assert.func(cb, 'callback');
+	var v = this.db[key];
+	if (v === undefined)
+		v = [];
+	if (!Array.isArray(v)) {
+		cb(new TypeError('key is not an array'));
+		return;
+	}
+	if (to >= v.length || to === -1)
+		to = undefined;
+	v = v.slice(from, to);
+	cb(null, v);
+};
 MockRedis.prototype.rpush = function () {
 	var args = Array.prototype.slice.call(arguments);
 	var key = args.shift();
