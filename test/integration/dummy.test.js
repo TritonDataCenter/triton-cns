@@ -33,11 +33,11 @@ test('locate CNS instance', function (t) {
 		t.strictEqual(objs.length, 1);
 		serviceUuid = objs[0].uuid;
 		sapi.get('/instances?service_uuid=' + serviceUuid,
-		    function (err, req, res, objs) {
-			t.error(err);
-			t.ok(Array.isArray(objs));
-			t.strictEqual(objs.length, 1);
-			instanceUuid = objs[0].uuid;
+		    function (ierr, ireq, ires, iobjs) {
+			t.error(ierr);
+			t.ok(Array.isArray(iobjs));
+			t.strictEqual(iobjs.length, 1);
+			instanceUuid = iobjs[0].uuid;
 			t.end();
 		});
 	});
