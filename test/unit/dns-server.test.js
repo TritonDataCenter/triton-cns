@@ -38,7 +38,12 @@ test('setup sandbox', function (t) {
 test('create basic dataset', function (t) {
 	var s = new UpdateStream({
 		client: redis,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({
@@ -202,7 +207,12 @@ test('generate some services', function (t) {
 
 	var s = new UpdateStream({
 		client: redis,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({

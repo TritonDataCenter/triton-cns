@@ -56,7 +56,12 @@ test('writes records for one container', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
 		client: client,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({
@@ -118,7 +123,12 @@ test('updates records upon a change of IP', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
 		client: client,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({
@@ -237,7 +247,12 @@ test('writes records for a service', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
 		client: client,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({
@@ -314,7 +329,12 @@ test('service with zones with multiple nics', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
 		client: client,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({
@@ -398,7 +418,12 @@ test('container with ipv6 addresses', function (t) {
 	var client = new MockRedis();
 	var s = new UpdateStream({
 		client: client,
-		config: {}
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
 	});
 	s.openSerial(false);
 	s.write({
