@@ -38,6 +38,8 @@
 {{/use_login}}
 {{#use_alias}}
 	"use_alias": {{{use_alias}}},
+{{/use_alias}}{{^use_alias}}
+	"use_alias": true,
 {{/use_alias}}
 
 	"full_poll_interval": {{#full_poll_interval}}{{{full_poll_interval}}}{{/full_poll_interval}}{{^full_poll_interval}}10000{{/full_poll_interval}},
