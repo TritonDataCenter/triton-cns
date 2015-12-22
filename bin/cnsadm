@@ -70,6 +70,7 @@ if (opts.help || !subcommand) {
 	console.error('cnsadm: tool for administering CNS');
 	console.error('\nsubcommands:');
 	console.error('  cnsadm status');
+	console.error('  cnsadm vm-names <uuid>');
 	console.error('  cnsadm config');
 	console.error('  cnsadm config [modifiers]');
 	console.error('  cnsadm zones');
@@ -171,6 +172,9 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 			break;
 		case 'upgrade':
 			do_upgrade();
+			break;
+		case 'vm-names':
+			do_vm_names();
 			break;
 		default:
 			console.error('cnsadm: error: unknown subcommand "%s"',
@@ -517,6 +521,34 @@ function do_status() {
 		});
 		cmdUtils.printTable(columns, rows);
 	});
+}
+
+function do_vm_names() {
+	if (args.length !== 1) {
+		console.error('usage: cnsadm vm-names <uuid>');
+		console.error('  lists DNS names associated with a given VM');
+		process.exit(1);
+	}
+	var uuid = args[0];
+	var q = dns.Question({
+		name: uuid + '.vm._cns_meta',
+		type: 'PTR'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', type: 'udp' },
+		timeout: 1000
+	});
+	req.on('message', function (err, answer) {
+		console.log('DNS NAME');
+		answer.answer.forEach(function (rec) {
+			console.log(rec.data);
+		});
+	});
+	req.once('end', function () {
+		process.exit(0);
+	});
+	req.send();
 }
 
 function do_upgrade() {
