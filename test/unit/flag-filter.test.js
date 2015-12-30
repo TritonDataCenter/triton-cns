@@ -116,6 +116,54 @@ test('removes all records when user flag is off', function (t) {
 	t.end();
 });
 
+test('keeps records when PTR tag is set with user flag', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			triton_cns_enabled: false,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {
+			'triton.cns.services': 'foo',
+			'triton.cns.reverse_ptr': 'foobar.com'
+		}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, ['foo']);
+	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.ptrname, 'foobar.com');
+	t.end();
+});
+
+test('removes all records when ptr is invalid', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			triton_cns_enabled: false,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {
+			'triton.cns.services': 'foo',
+			'triton.cns.reverse_ptr': '_$%$!!'
+		}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, ['foo']);
+	t.strictEqual(out.operation, 'remove');
+	t.strictEqual(out.hasOwnProperty('ptrname'), false);
+	t.end();
+});
+
 test('removes all records when vm tag is set', function (t) {
 	var s = new FlagFilter({});
 	s.write({
@@ -129,6 +177,30 @@ test('removes all records when vm tag is set', function (t) {
 		customer_metadata: {},
 		tags: {
 			'triton.cns.services': 'foo',
+			'triton.cns.disable': 'true'
+		}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, ['foo']);
+	t.strictEqual(out.operation, 'remove');
+	t.end();
+});
+
+test('removes all records when vm tag is set even with ptr', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			triton_cns_enabled: true,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {
+			'triton.cns.services': 'foo',
+			'triton.cns.reverse_ptr': 'foobar.com',
 			'triton.cns.disable': 'true'
 		}
 	});

@@ -188,3 +188,40 @@ test('with use_alias and use_login', function (t) {
 
 	t.end();
 });
+
+test('using a PTR name', function (t) {
+	var config = {
+	    use_alias: true,
+	    use_login: true,
+	    forward_zones: {
+		'foo': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    alias: 'test',
+	    services: [],
+	    ptrname: 'test.something.com',
+	    operation: 'add',
+	    owner: {
+		uuid: 'def432',
+		login: 'bar'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+
+	var rev = zones['3.2.1.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.something.com']}
+	]);
+
+	t.end();
+});
