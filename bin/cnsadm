@@ -388,7 +388,8 @@ function do_status() {
 		var req = dns.Request({
 			question: q,
 			server: { address: '127.0.0.1', type: 'udp' },
-			timeout: 1000
+			timeout: 1000,
+			try_edns: true
 		});
 		req.on('message', function (err, answer) {
 			answer.answer.forEach(function (rec) {
@@ -412,7 +413,8 @@ function do_status() {
 			var req = dns.Request({
 				question: q,
 				server: { address: '127.0.0.1', type: 'udp' },
-				timeout: 1000
+				timeout: 1000,
+				try_edns: true
 			});
 			req.on('message', function (err, answer) {
 				zones[zone].serial = answer.answer[0].serial;
@@ -438,7 +440,8 @@ function do_status() {
 		var req = dns.Request({
 			question: q,
 			server: { address: '127.0.0.1', type: 'udp' },
-			timeout: 1000
+			timeout: 1000,
+			try_edns: true
 		});
 		req.on('message', function (err, answer) {
 			answer.answer.forEach(function (rec) {
