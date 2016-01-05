@@ -278,8 +278,8 @@ test('multi-zone', function (t) {
 	t.deepEqual(rev, [
 	    {constructor: 'PTR', args: ['test.inst.bar.foo']}
 	]);
-	var rev = zones['1.2.3.in-addr.arpa']['4'];
-	t.deepEqual(rev, [
+	var rev2 = zones['1.2.3.in-addr.arpa']['4'];
+	t.deepEqual(rev2, [
 	    {constructor: 'PTR', args: ['test.inst.bar.bar']}
 	]);
 
@@ -339,8 +339,8 @@ test('multi-zone, single PTRs', function (t) {
 	t.deepEqual(rev, [
 	    {constructor: 'PTR', args: ['test.inst.bar.foo']}
 	]);
-	var rev = zones['1.2.3.in-addr.arpa']['4'];
-	t.deepEqual(rev, [
+	var rev2 = zones['1.2.3.in-addr.arpa']['4'];
+	t.deepEqual(rev2, [
 	    {constructor: 'PTR', args: ['test.inst.bar.baz']}
 	]);
 

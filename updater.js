@@ -29,7 +29,8 @@ var conf = config.parse(confPath);
 
 var client = redis.createClient(conf.redis_opts);
 
-var log = bunyan.createLogger({name: 'cns', level: 'trace'});
+var log = bunyan.createLogger({name: 'cns',
+    level: process.env.LOGLEVEL || 'debug'});
 
 var ps = new PollerStream({log: log, config: conf});
 var cff = new ChangefeedFilter({log: log, config: conf});
