@@ -225,3 +225,161 @@ test('using a PTR name', function (t) {
 
 	t.end();
 });
+
+test('multi-zone', function (t) {
+	var config = {
+	    use_alias: true,
+	    use_login: true,
+	    forward_zones: {
+		'foo': {},
+		'bar': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    alias: 'test',
+	    services: [],
+	    operation: 'add',
+	    owner: {
+		uuid: 'def432',
+		login: 'bar'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo']
+		},
+		{
+		    ip: '3.2.1.4',
+		    zones: ['bar']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones).sort(),
+	    ['1.2.3.in-addr.arpa', '3.2.1.in-addr.arpa', 'bar', 'foo']);
+
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['abc123.inst.bar', 'abc123.inst.def432', 'test.inst.bar',
+	    'test.inst.def432']);
+	t.deepEqual(Object.keys(zones['bar']).sort(),
+	    Object.keys(zones['foo']).sort());
+
+	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
+	t.deepEqual(Object.keys(zones['1.2.3.in-addr.arpa']), ['4']);
+
+	var fwd = zones['foo']['test.inst.bar'];
+	t.deepEqual(fwd, [
+	    {constructor: 'A', args: ['1.2.3.4']},
+	    {constructor: 'TXT', args: ['abc123']}
+	]);
+	var rev = zones['3.2.1.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.inst.bar.foo']}
+	]);
+	var rev = zones['1.2.3.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.inst.bar.bar']}
+	]);
+
+	t.end();
+});
+
+test('multi-zone, single PTRs', function (t) {
+	var config = {
+	    use_alias: true,
+	    use_login: true,
+	    forward_zones: {
+		'foo': {},
+		'bar': {},
+		'baz': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    alias: 'test',
+	    services: [],
+	    operation: 'add',
+	    owner: {
+		uuid: 'def432',
+		login: 'bar'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo', 'bar']
+		},
+		{
+		    ip: '3.2.1.4',
+		    zones: ['baz']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones).sort(),
+	    ['1.2.3.in-addr.arpa', '3.2.1.in-addr.arpa', 'bar', 'baz', 'foo']);
+
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['abc123.inst.bar', 'abc123.inst.def432', 'test.inst.bar',
+	    'test.inst.def432']);
+	t.deepEqual(Object.keys(zones['bar']).sort(),
+	    Object.keys(zones['foo']).sort());
+
+	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
+	t.deepEqual(Object.keys(zones['1.2.3.in-addr.arpa']), ['4']);
+
+	var fwd = zones['foo']['test.inst.bar'];
+	t.deepEqual(fwd, [
+	    {constructor: 'A', args: ['1.2.3.4']},
+	    {constructor: 'TXT', args: ['abc123']}
+	]);
+	var rev = zones['3.2.1.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.inst.bar.foo']}
+	]);
+	var rev = zones['1.2.3.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.inst.bar.baz']}
+	]);
+
+	t.end();
+});
+
+test('multi-zone, shortest zone priority PTR', function (t) {
+	var config = {
+	    use_alias: true,
+	    use_login: true,
+	    forward_zones: {
+		'foobarbaz': {},
+		'foobar': {},
+		'baz': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    alias: 'test',
+	    services: [],
+	    operation: 'add',
+	    owner: {
+		uuid: 'def432',
+		login: 'bar'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foobar', 'foobarbaz', 'baz']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+
+	var rev = zones['3.2.1.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.inst.bar.baz']}
+	]);
+
+	t.end();
+});
