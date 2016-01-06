@@ -37,7 +37,7 @@
 
     <exec_method type="method"
       name="start"
-      exec="./build/node/bin/node updater.js &amp;"
+      exec="/usr/bin/ctrun -l child -o noorphan ./build/node/bin/node --abort_on_uncaught_exception updater.js &amp;"
       timeout_seconds="30">
       <method_context working_directory="/opt/triton/cns">
         <method_credential user="nobody"
