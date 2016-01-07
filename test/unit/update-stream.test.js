@@ -110,12 +110,121 @@ test('records in zones are correct', function (t) {
 	t.strictEqual(revRecs[0].constructor, 'PTR');
 	t.deepEqual(revRecs[0].args, ['abc123.inst.def432.foo']);
 
+	var vmRecs = db['vm:abc123']['last_recs'];
+	t.strictEqual(typeof (vmRecs), 'string');
+	vmRecs = JSON.parse(vmRecs);
+	t.deepEquals(Object.keys(vmRecs).sort(),
+	    ['3.2.1.in-addr.arpa', 'foo']);
+	t.deepEquals(Object.keys(vmRecs['foo']).sort(),
+	    ['abc123.inst.def432']);
+	t.deepEquals(Object.keys(vmRecs['3.2.1.in-addr.arpa']).sort(),
+	    ['4']);
+
 	t.end();
 });
 
 test('serial numbers are correct', function (t) {
 	t.strictEqual(db['zone:foo:latest'], '2');
 	t.deepEqual(db['zone:foo:all'], ['2']);
+	t.end();
+});
+
+test('deletes records for one container', function (t) {
+	var client = new MockRedis();
+	var s = new UpdateStream({
+		client: client,
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
+	});
+	s.openSerial(false);
+	s.write({
+		uuid: 'abc123',
+		services: [],
+		operation: 'add',
+		owner: {
+			uuid: 'def432'
+		},
+		nics: [
+			{
+				ip: '1.2.3.4',
+				zones: ['foo']
+			}
+		]
+	}, undefined, function () {
+		s.closeSerial(function () {
+			currentSerial = 2;
+			s.write({
+				uuid: 'abc123',
+				services: [],
+				operation: 'remove',
+				owner: {
+					uuid: 'def432'
+				},
+				nics: [
+					{
+						ip: '1.2.3.4',
+						zones: ['foo']
+					}
+				]
+			});
+			s.once('finish', function () {
+				s.closeSerial(function () {
+					db = client.db;
+					t.end();
+				});
+			});
+			s.end();
+		});
+	});
+});
+
+test('records in zones are correct', function (t) {
+	var instRecs = db['zone:foo']['abc123.inst.def432'];
+	instRecs = JSON.parse(instRecs);
+	t.deepEqual(instRecs, []);
+
+	var revRecs = db['zone:3.2.1.in-addr.arpa']['4'];
+	revRecs = JSON.parse(revRecs);
+	t.deepEqual(revRecs, []);
+
+	var vmRecs = db['vm:abc123']['last_recs'];
+	t.strictEqual(typeof (vmRecs), 'string');
+	vmRecs = JSON.parse(vmRecs);
+	t.deepEquals(vmRecs, {});
+
+	t.end();
+});
+
+test('serial numbers are correct', function (t) {
+	t.strictEqual(db['zone:foo:latest'], '3');
+	t.deepEqual(db['zone:foo:all'], ['2', '3']);
+	t.end();
+});
+
+test('incrementals are correct', function (t) {
+	var adds = db['zone:foo:2:3:add'];
+	if (Array.isArray(adds)) {
+		adds = adds.map(function (r) {
+			return (JSON.parse(r));
+		});
+		t.deepEqual(adds, []);
+	} else {
+		t.strictEqual(adds, undefined);
+	}
+
+	var rems = db['zone:foo:2:3:remove'];
+	t.ok(Array.isArray(rems));
+	rems = rems.map(function (r) {
+		return (JSON.parse(r));
+	});
+	t.strictEqual(rems.length, 2);
+	t.strictEqual(rems[0].name, 'abc123.inst.def432');
+	t.strictEqual(rems[1].name, 'abc123.inst.def432');
+
 	t.end();
 });
 
@@ -130,6 +239,7 @@ test('updates records upon a change of IP', function (t) {
 			reverse_zones: {}
 		}
 	});
+	currentSerial = 1;
 	s.openSerial(false);
 	s.write({
 		uuid: 'abc123',
