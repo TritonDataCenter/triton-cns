@@ -46,7 +46,34 @@ test('exact uuid match', function (t) {
 	t.end();
 });
 
-test('wilcard match', function (t) {
+test('multiple exact uuid match', function (t) {
+	var config = {
+		foo: {
+			networks: ['abc123']
+		},
+		bar: {
+			networks: ['abc123']
+		},
+		foobar: {
+			networks: ['def123']
+		}
+	};
+	var s = new NetFilter({config: {forward_zones: config}});
+	s.write({
+		uuid: 'abcd1234',
+		nics: [
+			{ network_uuid: 'abc123' },
+			{ network_uuid: 'def123' }
+		]
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.nics[0].zones.sort(), ['bar', 'foo']);
+	t.deepEqual(out.nics[1].zones, ['foobar']);
+	t.end();
+});
+
+test('wildcard match', function (t) {
 	var config = {
 		foo: {
 			networks: ['abc123']
@@ -73,6 +100,26 @@ test('wildcard does not match if an exact is present', function (t) {
 		},
 		bar: {
 			networks: ['*']
+		}
+	};
+	var s = new NetFilter({config: {forward_zones: config}});
+	s.write({
+		uuid: 'abcd1234',
+		nics: [ { network_uuid: 'abc123' } ]
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.nics[0].zones, ['foo']);
+	t.end();
+});
+
+test('wildcard does not match if an exact is present after', function (t) {
+	var config = {
+		bar: {
+			networks: ['*']
+		},
+		foo: {
+			networks: ['abc123']
 		}
 	};
 	var s = new NetFilter({config: {forward_zones: config}});
