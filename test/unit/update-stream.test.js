@@ -9,6 +9,8 @@
 var test = require('./test-namer')('UpdateStream');
 var sinon = require('sinon');
 var util = require('util');
+var vasync = require('vasync');
+var bunyan = require('bunyan');
 
 var UpdateStream = require('../../lib/update-stream');
 var MockRedis = require('./mock-redis');
@@ -597,6 +599,167 @@ test('records in zones are correct', function (t) {
 test('serial numbers are correct', function (t) {
 	t.strictEqual(db['zone:foo:latest'], '2');
 	t.deepEqual(db['zone:foo:all'], ['2']);
+	t.end();
+});
+
+test('add, delete-add race against commit', function (t) {
+	var client = new MockRedis();
+	var log = bunyan.createLogger({name: 'race-test', level: 'debug'});
+	var s = new UpdateStream({
+		client: client,
+		log: log,
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
+	});
+	vasync.pipeline({
+		funcs: [
+			function (_, cb) {
+				currentSerial = 1;
+				s.openSerial(false);
+				s.write({
+					uuid: 'abc123',
+					services: [],
+					operation: 'add',
+					owner: {
+						uuid: 'def432'
+					},
+					nics: [
+						{
+							ip: '1.2.3.4',
+							zones: ['foo']
+						}
+					]
+				}, undefined, cb);
+			},
+			function (_, cb) {
+				s.write({
+					uuid: 'abc123',
+					services: [],
+					operation: 'add',
+					owner: {
+						uuid: 'def432'
+					},
+					nics: [
+						{
+							ip: '1.2.3.4',
+							zones: ['foo']
+						}
+					]
+				}, undefined, cb);
+			},
+			function (_, cb) {
+				s.closeSerial(cb);
+			},
+			function (_, cb) {
+				currentSerial = 2;
+				s.openSerial(false);
+				setTimeout(function () {
+					s.closeSerial(cb);
+				}, 100);
+			},
+			function (_, cb) {
+				currentSerial = 3;
+				s.openSerial(false);
+				s.write({
+					uuid: 'abc123',
+					services: [],
+					operation: 'remove',
+					owner: {
+						uuid: 'def432'
+					},
+					nics: [
+						{
+							ip: '1.2.3.4',
+							zones: ['foo']
+						}
+					]
+				}, undefined, cb);
+			},
+			function (_, cb) {
+				s.once('finish', cb);
+				s.write({
+					uuid: 'abc123',
+					services: [],
+					operation: 'add',
+					owner: {
+						uuid: 'def432'
+					},
+					nics: [
+						{
+							ip: '1.2.3.4',
+							zones: ['foo']
+						}
+					]
+				}, undefined, function () {
+					s.end();
+				});
+				s.closeSerial(function () {
+					currentSerial = 4;
+					s.emit('_test_commit_done');
+				});
+			},
+			function (_, cb) {
+				if (currentSerial === 4)
+					cb();
+				else
+					s.once('_test_commit_done', cb);
+			},
+			function (_, cb) {
+				s.openSerial(false);
+				setTimeout(function () {
+					s.closeSerial(cb);
+				}, 100);
+			}
+		]
+	}, function (err, res) {
+		db = client.db;
+		t.end();
+	});
+});
+
+test('records in zones are correct', function (t) {
+	var instRecs = db['zone:foo']['abc123.inst.def432'];
+	instRecs = JSON.parse(instRecs);
+	t.strictEqual(instRecs.length, 2);
+
+	var aRec = instRecs[0];
+	var txtRec = instRecs[1];
+	if (aRec.constructor !== 'A' && txtRec.constructor === 'A') {
+		aRec = instRecs[1];
+		txtRec = instRecs[0];
+	}
+
+	t.strictEqual(aRec.constructor, 'A');
+	t.deepEqual(aRec.args, ['1.2.3.4']);
+	t.strictEqual(txtRec.constructor, 'TXT');
+	t.deepEqual(txtRec.args, ['abc123']);
+
+	var revRecs = db['zone:3.2.1.in-addr.arpa']['4'];
+	revRecs = JSON.parse(revRecs);
+	t.strictEqual(revRecs.length, 1);
+	t.strictEqual(revRecs[0].constructor, 'PTR');
+	t.deepEqual(revRecs[0].args, ['abc123.inst.def432.foo']);
+
+	var vmRecs = db['vm:abc123']['last_recs'];
+	t.strictEqual(typeof (vmRecs), 'string');
+	vmRecs = JSON.parse(vmRecs);
+	t.deepEquals(Object.keys(vmRecs).sort(),
+	    ['3.2.1.in-addr.arpa', 'foo']);
+	t.deepEquals(Object.keys(vmRecs['foo']).sort(),
+	    ['abc123.inst.def432']);
+	t.deepEquals(Object.keys(vmRecs['3.2.1.in-addr.arpa']).sort(),
+	    ['4']);
+
+	t.end();
+});
+
+test('serial numbers are correct', function (t) {
+	t.strictEqual(db['zone:foo:latest'], '4');
+	t.deepEqual(db['zone:foo:all'], ['2', '4']);
 	t.end();
 });
 
