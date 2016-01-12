@@ -25,7 +25,7 @@
   "dependencies": {
     "assert-plus": "0.1.5",
     "bunyan": "1.5.1",
-    "changefeed": "1.1.6",
+    "changefeed": "git+ssh://git@github.com:joyent/node-sdc-changefeed.git#7516ebbe1a4b6e44281345663e3a0541877803b1",
     "dashdash": "1.10.1",
     "deep-equal": "1.0.1",
     "ipaddr.js": "1.0.3",
