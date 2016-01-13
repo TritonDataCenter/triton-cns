@@ -460,8 +460,46 @@ function do_status() {
 		req.send();
 	}
 
+	function getPeerVersions(_, cb) {
+		var q = dns.Question({
+			name: 'peer-versions._cns_meta',
+			type: 'TXT'
+		});
+		var req = dns.Request({
+			question: q,
+			server: { address: '127.0.0.1', type: 'udp' },
+			timeout: 1000,
+			try_edns: true
+		});
+		req.on('message', function (err, answer) {
+			var idxs = {};
+			answer.answer.forEach(function (rec) {
+				var idx = rec.name.split('.')[0];
+				if (!idxs[idx])
+					idxs[idx] = {};
+
+				if (rec.type === dns.consts.NAME_TO_QTYPE.TXT)
+					idxs[idx].version = rec.data[0];
+				else
+					idxs[idx].peer = rec.address;
+			});
+			Object.keys(idxs).forEach(function (idx) {
+				var entry = idxs[idx];
+				if (entry.peer && entry.version &&
+				    peers[entry.peer]) {
+					peers[entry.peer].version = 
+					    entry.version;
+				}
+			});
+		});
+		req.once('end', function () {
+			cb();
+		});
+		req.send();
+	}
+
 	vasync.pipeline({
-		funcs: [listZones, getZoneSoas, getPeers]
+		funcs: [listZones, getZoneSoas, getPeers, getPeerVersions]
 	}, function (err, res) {
 		if (err) {
 			console.error('cnsadm: error communicating with ' +
@@ -489,7 +527,8 @@ function do_status() {
 			{field: 'peer'},
 			{field: 'zone'},
 			{field: 'serial', title: 'latest serial'},
-			{field: 'drift'}
+			{field: 'drift'},
+			{field: 'version'}
 		];
 		rows = [];
 		Object.keys(peers).forEach(function (peer) {
@@ -498,8 +537,12 @@ function do_status() {
 			Object.keys(sobj.zones).forEach(function (zone) {
 				var row = {};
 				row.peer = '';
-				if (first)
+				row.version = '';
+				if (first) {
 					row.peer = peer;
+					if (sobj.version)
+						row.version = sobj.version;
+				}
 				row.zone = zone;
 				var peerSerial = sobj.zones[zone];
 				row.serial = peerSerial;
