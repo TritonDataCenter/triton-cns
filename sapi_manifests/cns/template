@@ -58,6 +58,10 @@
 		"address": "cnapi.{{{datacenter_name}}}.{{{dns_domain}}}"
 	},
 
+	"napi_opts": {
+		"address": "napi.{{{datacenter_name}}}.{{{dns_domain}}}"
+	},
+
 	"vmapi_opts": {
 		"address": "vmapi.{{{datacenter_name}}}.{{{dns_domain}}}",
 		"limit": {{#vmapi_limit}}{{{vmapi_limit}}}{{/vmapi_limit}}{{^vmapi_limit}}500{{/vmapi_limit}}

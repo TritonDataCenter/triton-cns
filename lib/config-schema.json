@@ -61,6 +61,16 @@
       },
       "additionalProperties": false
     },
+    "napi_opts": {
+      "type": "object",
+      "required": true,
+      "properties": {
+        "address": {
+          "type": "string",
+          "required": true
+        }
+      }
+    },
     "vmapi_opts": {
       "type": "object",
       "required": true,
