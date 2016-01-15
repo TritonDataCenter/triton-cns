@@ -15,10 +15,10 @@ var restify = require('restify-clients');
 var cmdUtils = require('../lib/cmd-utils');
 var child = require('child_process');
 var sprintf = require('sprintf-js').sprintf;
-var dns = require('native-dns');
 var vasync = require('vasync');
 var deepEquals = require('deep-equal');
 var jsprim = require('jsprim');
+var restify = require('restify-clients');
 
 assert.strictEqual(require.main, module);
 
@@ -70,7 +70,7 @@ if (opts.help || !subcommand) {
 	console.error('cnsadm: tool for administering CNS');
 	console.error('\nsubcommands:');
 	console.error('  cnsadm status');
-	console.error('  cnsadm vm-names <uuid>');
+	console.error('  cnsadm vm <uuid>');
 	console.error('  cnsadm config');
 	console.error('  cnsadm config [modifiers]');
 	console.error('  cnsadm zones');
@@ -119,6 +119,8 @@ assert.strictEqual(subcommand, args.shift());
 var service;
 var waiting = {};
 
+var apiClient;
+
 sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 	if (err) {
 		console.error('cnsadm: error: failed to communicate with ' +
@@ -149,6 +151,10 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 		process.exit(2);
 	}
 
+	apiClient = restify.createJsonClient({
+		url: 'http://127.0.0.1'
+	});
+
 	sapi.get('/services?name=cns', function (err2, req2, res2, objs) {
 		if (err2) {
 			console.error('cnsadm: error: failed to communicate ' +
@@ -173,7 +179,7 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 		case 'upgrade':
 			do_upgrade();
 			break;
-		case 'vm-names':
+		case 'vm':
 			do_vm_names();
 			break;
 		default:
@@ -377,129 +383,29 @@ function do_zones() {
 }
 
 function do_status() {
-	var zones = {};
-	var peers = {};
+	var zones = [];
+	var peers = [];
+	var zoneLookup = {};
 
 	function listZones(_, cb) {
-		var q = dns.Question({
-			name: 'zones._cns_meta',
-			type: 'TXT'
-		});
-		var req = dns.Request({
-			question: q,
-			server: { address: '127.0.0.1', type: 'udp' },
-			timeout: 1000,
-			try_edns: true
-		});
-		req.on('message', function (err, answer) {
-			answer.answer.forEach(function (rec) {
-				zones[rec.data[0]] = {
-					zone: rec.data[0]
-				};
+		apiClient.get('/zones', function (err, req, res, objs) {
+			zones = objs;
+			objs.forEach(function (obj) {
+				zoneLookup[obj.name] = obj;
 			});
-		});
-		req.once('end', function () {
-			cb();
-		});
-		req.send();
-	}
-
-	function getZoneSoas(_, cb) {
-		function getZoneSoa(zone, ccb) {
-			var q = dns.Question({
-				name: zone,
-				type: 'SOA'
-			});
-			var req = dns.Request({
-				question: q,
-				server: { address: '127.0.0.1', type: 'udp' },
-				timeout: 1000,
-				try_edns: true
-			});
-			req.on('message', function (err, answer) {
-				zones[zone].serial = answer.answer[0].serial;
-			});
-			req.once('end', function () {
-				ccb();
-			});
-			req.send();
-		}
-		vasync.forEachParallel({
-			func: getZoneSoa,
-			inputs: Object.keys(zones)
-		}, function (err, res) {
 			cb(err);
 		});
 	}
 
-	function getPeers(_, cb) {
-		var q = dns.Question({
-			name: 'peers._cns_meta',
-			type: 'SOA'
+	function listPeers(_, cb) {
+		apiClient.get('/peers', function (err, req, res, objs) {
+			peers = objs;
+			cb(err);
 		});
-		var req = dns.Request({
-			question: q,
-			server: { address: '127.0.0.1', type: 'udp' },
-			timeout: 1000,
-			try_edns: true
-		});
-		req.on('message', function (err, answer) {
-			answer.answer.forEach(function (rec) {
-				if (peers[rec.admin] === undefined)
-					peers[rec.admin] = {
-					     peer: rec.admin,
-					     zones: {}
-					};
-				peers[rec.admin].zones[rec.primary] =
-				    rec.serial;
-			});
-		});
-		req.once('end', function () {
-			cb();
-		});
-		req.send();
-	}
-
-	function getPeerVersions(_, cb) {
-		var q = dns.Question({
-			name: 'peer-versions._cns_meta',
-			type: 'TXT'
-		});
-		var req = dns.Request({
-			question: q,
-			server: { address: '127.0.0.1', type: 'udp' },
-			timeout: 1000,
-			try_edns: true
-		});
-		req.on('message', function (err, answer) {
-			var idxs = {};
-			answer.answer.forEach(function (rec) {
-				var idx = rec.name.split('.')[0];
-				if (!idxs[idx])
-					idxs[idx] = {};
-
-				if (rec.type === dns.consts.NAME_TO_QTYPE.TXT)
-					idxs[idx].version = rec.data[0];
-				else
-					idxs[idx].peer = rec.address;
-			});
-			Object.keys(idxs).forEach(function (idx) {
-				var entry = idxs[idx];
-				if (entry.peer && entry.version &&
-				    peers[entry.peer]) {
-					peers[entry.peer].version =
-					    entry.version;
-				}
-			});
-		});
-		req.once('end', function () {
-			cb();
-		});
-		req.send();
 	}
 
 	vasync.pipeline({
-		funcs: [listZones, getZoneSoas, getPeers, getPeerVersions]
+		funcs: [listZones, listPeers]
 	}, function (err, res) {
 		if (err) {
 			console.error('cnsadm: error communicating with ' +
@@ -509,7 +415,7 @@ function do_status() {
 
 		var serial = utils.currentSerial();
 		var columns = [
-		    {field: 'zone'},
+		    {field: 'name', title: 'zone'},
 		    {field: 'serial', title: 'latest serial'},
 		    {field: 'serial', title: 'changed',
 			stringify: function (v) {
@@ -531,32 +437,30 @@ function do_status() {
 			{field: 'version'}
 		];
 		rows = [];
-		Object.keys(peers).forEach(function (peer) {
-			var sobj = peers[peer];
+		peers.forEach(function (peer) {
 			var first = true;
-			Object.keys(sobj.zones).forEach(function (zone) {
+			Object.keys(peer.serials).forEach(function (z) {
+				var zone = zoneLookup[z];
+
 				var row = {};
 				row.peer = '';
 				row.version = '';
 				if (first) {
-					row.peer = peer;
-					if (sobj.version)
-						row.version = sobj.version;
+					row.peer = peer.address;
+					if (peer.version)
+						row.version = peer.version;
 				}
-				row.zone = zone;
-				var peerSerial = sobj.zones[zone];
+				row.zone = z;
+				var peerSerial = peer.serials[z];
 				row.serial = peerSerial;
 				row.drift = '';
 
-				if (zones[zone] &&
-				    zones[zone].serial !== undefined) {
-					var latestSerial = zones[zone].serial;
-					var delta = latestSerial - peerSerial;
+				if (zone && zone.serial !== undefined) {
+					var delta = zone.serial - peerSerial;
 					if (delta != 0) {
 						var ago = cmdUtils.timeUnits(
 						    Math.abs(delta) * 10);
-						row.drift = sprintf(
-						    '%s (%d Sx)', ago, delta);
+						row.drift = ago;
 					}
 				} else {
 					row.drift = '???';
@@ -571,30 +475,34 @@ function do_status() {
 
 function do_vm_names() {
 	if (args.length !== 1) {
-		console.error('usage: cnsadm vm-names <uuid>');
-		console.error('  lists DNS names associated with a given VM');
+		console.error('usage: cnsadm vm <uuid>');
+		console.error('  shows information about CNS and a given VM');
 		process.exit(1);
 	}
 	var uuid = args[0];
-	var q = dns.Question({
-		name: uuid + '.vm._cns_meta',
-		type: 'PTR'
-	});
-	var req = dns.Request({
-		question: q,
-		server: { address: '127.0.0.1', type: 'udp' },
-		timeout: 1000
-	});
-	req.on('message', function (err, answer) {
-		console.log('DNS NAME');
-		answer.answer.forEach(function (rec) {
-			console.log(rec.data);
-		});
-	});
-	req.once('end', function () {
+	var schema = {
+		type: 'object',
+		properties: {
+			'uuid': { type: 'string' },
+			'last_visit': {
+				type: 'number',
+				stringify: function (v) {
+					var now = (new Date()).getTime();
+					var delta = (now - v) / 1000;
+					return (cmdUtils.timeUnits(delta) +
+					    ' ago');
+				}
+			},
+			'names': {
+				type: 'array',
+				items: { type: 'string' }
+			}
+		}
+	};
+	apiClient.get('/vm/' + uuid, function (err, req, res, obj) {
+		cmdUtils.printFromSchema(obj, schema);
 		process.exit(0);
 	});
-	req.send();
 }
 
 function do_upgrade() {

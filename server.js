@@ -10,6 +10,7 @@ var redis = require('redis');
 var bunyan = require('bunyan');
 var config = require('./lib/config');
 var DNSServer = require('./lib/dns-server');
+var APIServer = require('./lib/api-server');
 var path = require('path');
 
 var confPath;
@@ -29,4 +30,12 @@ var s = new DNSServer({
 	log: log,
 	config: conf,
 	port: 53
+});
+
+var api = new APIServer({
+	client: client,
+	log: log,
+	config: conf,
+	port: 80,
+	dnsServer: s
 });
