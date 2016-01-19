@@ -1,37 +1,38 @@
-.TH cnsadm 1 "Dec 2015" CNS "CNS Commands"
+.TH cnsadm 1 "Jan 2016" cns "CNS Commands"
 .SH NAME
 .PP
 cnsadm \- administer the Triton CNS
 .SH SYNOPSIS
 .PP
-.B cnsadm
-status
+\fB\fCcnsadm\fR status
 .PP
-.B cnsadm
-config
+\fB\fCcnsadm\fR vm <\fIuuid\fP>
 .PP
-.B cnsadm
-config [\fImodifiers\fR]
+\fB\fCcnsadm\fR peers
 .PP
-.B cnsadm
-zones
+\fB\fCcnsadm\fR peers [\fB\fC\-d\fR] <\fIaddress\fP>
 .PP
-.B cnsadm
-zones <\fIzone\fR> [\fImodifiers\fR]
+\fB\fCcnsadm\fR config
 .PP
-.B cnsadm
-zones [\fB\-a|\-d\fR] <\fIzone\fR> [\fImodifiers\fR]
+\fB\fCcnsadm\fR config [\fImodifiers\fP]
+.PP
+\fB\fCcnsadm\fR zones
+.PP
+\fB\fCcnsadm\fR zones <\fIzonename\fP> [\fImodifiers\fP]
+.PP
+\fB\fCcnsadm\fR zones [\fB\fC\-a\fR|\fB\fC\-d\fR] <\fIzonename\fP> [\fImodifiers\fP]
+.PP
+\fB\fCcnsadm\fR upgrade
 .SH DESCRIPTION
 .PP
-The \fBcnsadm\fR tool is used to administer the Triton Container Naming
-Service (CNS).
-It gives a simple interface to view and edit CNS' SAPI configuration, as well
-as view information about the server's operation.
+The \fB\fCcnsadm\fR tool is used to administer the Triton Container Naming Service
+(CNS). It gives a simple interface to view and edit CNS' SAPI configuration, as
+well as view information about the server's operation.
 .PP
 CNS is a DNS server which automatically generates records based on the contents
 of SDC: in particular, it uses information about VMs from VMAPI as well as
-\fBtags\fR and \fBmetadata\fR to decide what records to generate, as well as
-its own service configuration in SAPI.
+\fB\fCtags\fR and \fB\fCmetadata\fR to decide what records to generate, as well as its own
+service configuration in SAPI.
 .PP
 DNS has a lot of internal terminology that should be understood before
 undertaking any production deployment of this system. In particular, an
@@ -40,78 +41,134 @@ understanding of the DNS primary and secondary (sometimes called "master" and
 glue records, may prove important in correctly configuring CNS.
 .PP
 There are 3 key modes that CNS can be deployed in:
+.IP
+\fB\fCStandalone\fR mode: is the default mode of operation, where CNS serves
+records as an authoritative nameserver. CNS must be given an external IP 
+address and the DNS zones delegated to it by adding NS glue records to their 
+parent zone.
+.IP
+\fB\fCPrimary\fR mode: functions identically to Standalone mode, except that CNS is
+also configured to allow zone transfers to, and send NOTIFY messages to, some
+set of secondary nameservers. These "peer" nameservers stay in sync with CNS
+using (incremental) zone transfers and serve the same records it does.
+.IP
+\fB\fCHidden Primary\fR mode (sometimes called "hidden master"): does not require 
+CNS to be exposed to clients directly. Instead, a set of peer nameservers 
+serve the clients on its behalf after having synchronized the DNS records (
+over some private network) from it using zone transfers. One of the peers is
+designated as the "visible primary" and its name is listed on SOA records in
+the "mname" field as the zone primary, instead of CNS.
 .PP
-.B Standalone
-mode: is the default mode of operation, where CNS serves records as an
-authoritative nameserver. CNS must be given an external IP address and the
-DNS zones delegated to it by adding NS glue records to their parent zone.
-.PP
-.B Primary
-mode: functions identically to Standalone mode, except that CNS is also 
-configured to allow zone transfers to, and send NOTIFY messages to, some set
-of secondary nameservers. These "peer" nameservers stay in sync with CNS using
-(incremental) zone transfers and serve the same records it does.
-.PP
-.B Hidden Primary
-mode (sometimes called "hidden master"): does not require CNS to be exposed to
-clients directly. Instead, a set of peer nameservers serve the clients on its
-behalf after having synchronized the DNS records (over some private network)
-from it using zone transfers. One of the peers is designated as the "visible
-primary" and its name is listed on SOA records in the "mname" field as the
-zone primary, instead of CNS.
-.PP
-In both Standalone and Primary mode, CNS must know a publically-resolvable
-DNS name for its own external address. To use these modes, all that is needed
-from a clean install is to set this name and then change the name of the default
-DNS zone as needed (see \fBExamples\fR, below).
+In both Standalone and Primary mode, CNS must know a publically\-resolvable DNS
+name for its own external address. To use these modes, all that is needed from 
+a clean install is to set this name and then change the name of the default DNS
+zone as needed (see \fIEXAMPLES\fP, below).
 .PP
 Then, one may add secondary nameservers for Primary mode operation, by adding
-them, both to the config option \fBallow_transfer\fR and to the list of zone
-\fBpeers\fR.
+them, both to the config option \fB\fCallow_transfer\fR and to the list of zone
+\fB\fCpeers\fR\&.
 .PP
-To use Hidden Primary mode, one must set \fBhidden_primary\fR to \fItrue\fR, as
-well as configuring the options listed for Standalone and Primary modes above.
+To use Hidden Primary mode, one must set \fB\fChidden_primary\fR to \fItrue\fP, as well as
+configuring the options listed for Standalone and Primary modes above.
 .SH EXAMPLES
 .PP
 Show the current configuration:
 .PP
-.nf
 .RS
+.nf
 $ cnsadm config
 $ cnsadm zones
-.RE
 .fi
+.RE
 .PP
-To set up Standalone or Primary mode, and change the domain being served from
-the default \fIdc.sdc.domain\fR (based on the information you supplied during
-SDC setup) to our custom subdomain:
+Get an overview of the CNS system's current status:
 .PP
-.nf
 .RS
-$ cnsadm config my_name=\fIpublic.hostname.com\fR \\
-                hostmaster=\fIhostmaster@hostname.com\fR
-$ cnsadm zones dc.sdc.domain zone=\fIcns.hostname.com\fR
-.RE
+.nf
+$ cnsadm status
 .fi
+.RE
+.PP
+To set up Standalone or Primary mode, and change the domain being served from the default \fIdc.sdc.domain\fP (based on the information you supplied during SDC setup) to our custom subdomain:
+.PP
+.RS
+$ cnsadm config my_name=\fIpublic.hostname.com\fP \[rs]
+                hostmaster=\fIhostmaster\fP@\fIhostname.com\fP
+.PP
+$ cnsadm zones dc.sdc.domain zone=\fIcns.hostname.com\fP
+.RE
 .PP
 Add two secondary nameservers:
 .PP
-.nf
 .RS
-$ cnsadm config allow_transfer+=\fI192.168.5.2\fR,\fI192.168.6.2\fR
-$ cnsadm zones \fIcns.hostname.com\fR \\
-               peers+=\fIns0.hostname.com\fR,\fIns1.hostname.com\fR
+$ cnsadm config allow_transfer+=\fI192.168.5.2\fP,\fI192.168.6.2\fP
+.PP
+$ cnsadm zones \fIcns.hostname.com\fP \[rs]
+               peers+=\fIns0.hostname.com\fP,\fIns1.hostname.com\fP
 .RE
-.fi
 .PP
 And then change to Hidden Primary mode:
 .PP
-.nf
 .RS
-$ cnsadm zones \fIcns.hostname.com\fR hidden_primary=true
+$ cnsadm zones \fIcns.hostname.com\fP hidden_primary=true
 .RE
-.fi
 .SH SUBCOMMANDS
+.TP
+\fB\fCcnsadm status\fR
+Fetches status information about the CNS server and its operation and summarizes it in two tables: a list of zones and when they were last updated, and a list of peers, their names and version and how far behind they currently are.
+.TP
+\fB\fCcnsadm vm\fR <\fIuuid\fP>
+Displays information CNS has collected about a given SDC VM, including when it was last updated and a list of all names for it that are listed in DNS.
+.TP
+\fB\fCcnsadm peers\fR [\fB\fC\-d\fR] <\fIaddress\fP>
+Shows detailed status information about a CNS peer nameserver. With the \fB\fC\-d\fR option given, deletes all status information about the peer.
+.IP
+Peer entries that are no longer in use should be removed as soon as possible so that the garbage collection of incremental change records can take place.
+.TP
+\fB\fCcnsadm config\fR
+Displays the current configuration of the CNS system as a whole. Configuration options that are at a per\-DNS\-zone level can be found under the \fB\fCcnsadm zones\fR sub\-command.
+.TP
+\fB\fCcnsadm config\fR [\fImodifiers\fP]
+Alters the configuration of the CNS system. See \fIMODIFIERS\fP, below.
+.TP
+\fB\fCcnsadm zones\fR
+Displays per\-DNS\-zone configuration options, summarized in a table listing all known DNS zones.
+.TP
+\fB\fCcnsadm zones\fR <\fIzonename\fP>
+Displays in detail the per\-zone configuration for one DNS zone.
+.TP
+\fB\fCcnsadm zones\fR [\fB\fC\-a\fR|\fB\fC\-d\fR] <\fIzonename\fP> [\fImodifiers\fP]
+Alters the per\-zone configuration for a given DNS zone. With \fB\fC\-a\fR, adds a new zone with the given name, or with \fB\fC\-d\fR, deletes the named zone. No \fImodifiers\fP may be given with the \fB\fC\-d\fR option.
+.TP
+\fB\fCcnsadm upgrade\fR
+Perform any pending upgrade operations. This command should be run after upgrading CNS past any configuration flag\-day. It will attempt to convert your configuration to the new format.
+.SH MODIFIERS
 .PP
+Some \fB\fCcnsadm\fR subcommands such as \fB\fCcnsadm zones\fR support \fImodifiers\fP to tell CNS what changes to make to the configuration.
+.PP
+A modifier is a single commandline argument of one of the following forms:
+.RS
+.IP \(bu 2
+\fIfield\fP\fB\fC=\fR\fIvalue\fP
+.IP \(bu 2
+\fIfield\fP\fB\fC+=\fR\fIvalue\fP (only for arrays)
+.IP \(bu 2
+\fIfield\fP\fB\fC\-=\fR\fIvalue\fP (only for arrays)
+.RE
+.PP
+The \fB\fC=\fR operator sets the value of the given \fIfield\fP, entirely replacing any previous value.
+.PP
+The latter two operators \fB\fC+=\fR and \fB\fC\-=\fR are only supported when the named \fIfield\fP is of an array type: \fB\fC+=\fR adds the given \fIvalues\fP to the array (a set union) while \fB\fC\-=\fR removes them (set subtraction).
+.PP
+The valid \fIvalues\fP depend on the type of the field being altered:
+.IP
+For \fB\fCstrings\fR or \fB\fCnumbers\fR, the \fIvalue\fP is simply the string value, unquoted.
+.IP
+For \fB\fCbooleans\fR, the \fIvalue\fP must be either \fB\fCtrue\fR or \fB\fCfalse\fR, \fB\fCyes\fR or \fB\fCno\fR, \fB\fCon\fR or \fB\fCoff\fR\&.
+.IP
+For \fB\fCobjects\fR, the \fIvalue\fP must be JSON.
+.IP
+For \fB\fCarrays\fR, the \fIvalue\fP must be a comma\-separated list of whatever type the array contains (e.g. an array of booleans could be written as "true,yes,false")
 .SH BUGS
-.PP
+.TP
+\[la]https://github.com/joyent/triton-cns/issues\[ra]

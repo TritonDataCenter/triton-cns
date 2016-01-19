@@ -22,6 +22,8 @@ NODE_PREBUILT_IMAGE	 = b4bdc598-8939-11e3-bea4-8341f6861379
 #
 # Tools
 #
+# Get md2man-roff from <https://github.com/sunaku/md2man>
+MD2MAN		:= md2man-roff
 TAP		:= ./node_modules/.bin/tape
 ISTANBUL	:= ./node_modules/.bin/istanbul
 
@@ -38,6 +40,11 @@ JSSTYLE_FLAGS    = -f tools/jsstyle.conf
 SMF_MANIFESTS_IN = smf/manifests/cns-server.xml.in \
 		   smf/manifests/cns-updater.xml.in \
 		   smf/manifests/cns-redis.xml.in
+
+MAN_PAGES       := $(shell ls man/src)
+MAN_OUTDIR      := man/man1
+MAN_OUTPAGES=$(MAN_PAGES:%.md=$(MAN_OUTDIR)/%.1)
+MAN_ROOT        := man/src
 
 include ./tools/mk/Makefile.defs
 ifeq ($(shell uname -s),SunOS)
@@ -113,6 +120,15 @@ publish: release
 	fi
 	mkdir -p $(BITS_DIR)/cns
 	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/cns/$(RELEASE_TARBALL)
+
+$(MAN_OUTDIR):
+	mkdir -p $@
+
+$(MAN_OUTDIR)/%.1: $(MAN_ROOT)/%.md | $(MAN_OUTDIR)
+	$(MD2MAN) $^ > $@
+
+.PHONY: manpages
+manpages: $(MAN_OUTPAGES)
 
 include ./tools/mk/Makefile.deps
 ifeq ($(shell uname -s),SunOS)
