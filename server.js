@@ -11,6 +11,7 @@ var bunyan = require('bunyan');
 var config = require('./lib/config');
 var DNSServer = require('./lib/dns-server');
 var APIServer = require('./lib/api-server');
+var restify = require('restify');
 var path = require('path');
 
 var confPath;
@@ -22,8 +23,14 @@ var conf = config.parse(confPath);
 
 var client = redis.createClient(conf.redis_opts);
 
-var log = bunyan.createLogger({name: 'cns',
-    level: process.env.LOGLEVEL || 'debug'});
+var log = bunyan.createLogger({
+	name: 'cns',
+	level: process.env.LOGLEVEL || 'debug',
+	serializers: {
+		req: restify.bunyan.serializers.req,
+		res: restify.bunyan.serializers.res
+	}
+});
 
 var s = new DNSServer({
 	client: client,

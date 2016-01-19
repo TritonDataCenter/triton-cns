@@ -49,6 +49,13 @@ case 'zones':
 		help: 'Remove a zone by the given name'
 	});
 	break;
+case 'peers':
+	options.push({
+		names: ['delete', 'd'],
+		type: 'bool',
+		help: 'Remove a peer with the given address'
+	});
+	break;
 default:
 	break;
 }
@@ -70,6 +77,7 @@ if (opts.help || !subcommand) {
 	console.error('\nsubcommands:');
 	console.error('  cnsadm status');
 	console.error('  cnsadm vm <uuid>');
+	console.error('  cnsadm peers [-d] <address>');
 	console.error('  cnsadm config');
 	console.error('  cnsadm config [modifiers]');
 	console.error('  cnsadm zones');
@@ -180,6 +188,9 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 			break;
 		case 'vm':
 			do_vm_names();
+			break;
+		case 'peers':
+			do_peers();
 			break;
 		default:
 			console.error('cnsadm: error: unknown subcommand "%s"',
@@ -502,6 +513,58 @@ function do_vm_names() {
 		cmdUtils.printFromSchema(obj, schema);
 		process.exit(0);
 	});
+}
+
+function do_peers() {
+	if (args.length != 1) {
+		console.error('cnsadm: error: must supply a peer address');
+		process.exit(1);
+	}
+	var addr = args[0];
+	if (opts['delete']) {
+		apiClient.del('/peer/' + addr, function (err, req, res) {
+			if (err) {
+				console.error('cnsadm: error: %s: %s',
+				    err.name, err.message);
+				process.exit(1);
+			}
+			process.exit(0);
+		});
+	} else {
+		function objStringify(ctrs) {
+			var s = '\n';
+			Object.keys(ctrs).forEach(function (k) {
+				s += sprintf('    %s: %s\n', k, ctrs[k]);
+			});
+			return (s);
+		}
+		var schema = {
+			type: 'object',
+			properties: {
+				'address': { type: 'string' },
+				'version': { type: 'string' },
+				'using_notify': { type: 'boolean' },
+				'using_ixfr': { type: 'boolean' },
+				'serials': {
+					type: 'object',
+					stringify: objStringify
+				},
+				'counters': {
+					type: 'object',
+					stringify: objStringify
+				}
+			}
+		};
+		apiClient.get('/peer/' + addr, function (err, req, res, obj) {
+			if (err) {
+				console.error('cnsadm: error: %s: %s',
+				    err.name, err.message);
+				process.exit(1);
+			}
+			cmdUtils.printFromSchema(obj, schema);
+			process.exit(0);
+		});
+	}
 }
 
 function do_upgrade() {
