@@ -38,5 +38,9 @@
 	"vmapi_opts": {
 		"address": "10.99.99.27",
 		"limit": 200
+	},
+
+	"api_server": {
+		"listen": ["127.0.0.1", "::1"]
 	}
 }
