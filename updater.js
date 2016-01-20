@@ -8,6 +8,7 @@
 
 var redis = require('redis');
 var bunyan = require('bunyan');
+var util = require('util');
 var changefeed = require('changefeed');
 var ChangefeedFilter = require('./lib/changefeed-filter');
 var UpdateStream = require('./lib/update-stream');
@@ -20,6 +21,8 @@ var PollerStream = require('./lib/poller-stream');
 var ReaperStream = require('./lib/reaper-stream');
 var config = require('./lib/config');
 var path = require('path');
+
+var FSM = require('mooremachine').FSM;
 
 var confPath;
 if (process.argv[2])
@@ -41,6 +44,7 @@ var npf = new NetPoolFilter({log: log, config: conf});
 var nf = new NetFilter({log: log, config: conf});
 var ffs = new FlagFilter({log: log, config: conf});
 var s = new UpdateStream({client: client, log: log, config: conf});
+var rs = new ReaperStream({log: log, config: conf, client: client});
 
 var cfOpts = {
 	log: log,
@@ -58,64 +62,99 @@ var cfOpts = {
 	}
 };
 var cfl = changefeed.createListener(cfOpts);
-cfl.register();
 
-var initialized = false;
+var EventEmitter = require('events').EventEmitter;
+var pollTimeEmitter = new EventEmitter();
+setInterval(function () {
+	pollTimeEmitter.emit('timeout');
+}, 10000);
 
-function _setupMainPipes() {
+function AppFSM() {
+	FSM.call(this, 'initial');
+}
+util.inherits(AppFSM, FSM);
+
+AppFSM.prototype.state_initial = function (on, once, timeout) {
+	var self = this;
+
 	ps.pipe(cnf);
 	cnf.pipe(uf);
 	uf.pipe(npf);
 	npf.pipe(nf);
 	nf.pipe(ffs);
 	ffs.pipe(s);
-	s.openSerial(false);
-}
-
-function _setupReaper() {
-	var rs = new ReaperStream({log: log, config: conf, client: client});
 	rs.pipe(cnf);
-	function reap() {
-		rs.start();
-		setTimeout(reap, 300000);
-	}
-	setTimeout(reap, 15000);
-}
 
-function _bootstrap() {
-	log.trace('_bootstrap');
+	once(cfl, 'bootstrap', function () {
+		self.gotoState('cfFirstPoll');
+	});
+	once(cfl, 'error', function () {
+		self.gotoState('fallbackFirstPoll');
+	});
+	cfl.register();
+};
 
-	if (!initialized)
-		_setupMainPipes();
-
+AppFSM.prototype.state_cfFirstPoll = function (on, once, timeout) {
+	var self = this;
+	s.openSerial(false);
 	ps.start();
-	ps.once('pollFinish', function () {
+	once(ps, 'pollFinish', function () {
 		log.info('Poll done, committing...');
-		if (!initialized) {
-			s.closeSerial();
-			_setupReaper();
-			cfl.pipe(cff);
-			cff.pipe(cnf);
-			initialized = true;
-		}
-	});
-}
-
-function _fallback() {
-	_setupMainPipes();
-	ps.start();
-	ps.once('pollFinish', function () {
-		log.info('First poll done, committing...');
 		s.closeSerial();
-
-		function poll() {
-			ps.start();
-			setTimeout(poll, 10000);
-		}
-		setTimeout(poll, 10000);
-		_setupReaper();
+		self.gotoState('cfRunning');
 	});
-}
+	once(cfl, 'error', function () {
+		self.gotoState('fallbackFirstPoll');
+	});
+};
 
-cfl.on('bootstrap', _bootstrap);
-cfl.on('error', _fallback);
+AppFSM.prototype.state_cfRunning = function (on, once, timeout) {
+	var self = this;
+	cfl.pipe(cff);
+	cff.pipe(cnf);
+	rs.start();
+
+	once(cfl, 'bootstrap', function () {
+		self.gotoState('cfFirstPoll');
+	});
+
+	once(cfl, 'error', function () {
+		self.gotoState('fallback');
+	});
+};
+
+AppFSM.prototype.state_fallbackFirstPoll = function (on, once, timeout) {
+	var self = this;
+	s.openSerial(false);
+	ps.start();
+	once(ps, 'pollFinish', function () {
+		log.info('Poll done, committing...');
+		s.closeSerial();
+		self.gotoState('fallback');
+	});
+	on(cfl, 'error', function () {
+		/* Ignore any CF errors while in fallback mode. */
+	});
+	once(cfl, 'bootstrap', function () {
+		self.gotoState('cfFirstPoll');
+	});
+};
+
+AppFSM.prototype.state_fallback = function (on, once, timeout) {
+	var self = this;
+	rs.start();
+	on(pollTimeEmitter, 'timeout', function () {
+		ps.start();
+	});
+	on(cfl, 'error', function () {
+		/* Ignore any CF errors while in fallback mode. */
+	});
+	once(cfl, 'bootstrap', function () {
+		self.gotoState('cfFirstPoll');
+	});
+};
+
+var app = new AppFSM();
+app.on('stateChanged', function (state) {
+	log.debug('app state changed to %s', state);
+});
