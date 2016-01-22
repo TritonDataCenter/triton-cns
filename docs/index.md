@@ -1,5 +1,6 @@
 ---
 title: CNS REST API
+markdown2extras: tables, code-friendly, cuddled-lists, fenced-code-blocks
 ---
 <!--
     This Source Code Form is subject to the terms of the Mozilla Public

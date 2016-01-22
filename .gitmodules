@@ -4,3 +4,6 @@
 [submodule "deps/jsstyle"]
 	path = deps/jsstyle
 	url = https://github.com/davepacheco/jsstyle
+[submodule "deps/restdown"]
+	path = deps/restdown
+	url = https://github.com/trentm/restdown

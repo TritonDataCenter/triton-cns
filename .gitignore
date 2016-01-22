@@ -3,3 +3,5 @@ build
 smf/manifests/*.xml
 etc/config.json
 coverage
+docs/*.html
+docs/*.json

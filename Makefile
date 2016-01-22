@@ -46,6 +46,8 @@ MAN_OUTDIR      := man/man1
 MAN_OUTPAGES=$(MAN_PAGES:%.md=$(MAN_OUTDIR)/%.1)
 MAN_ROOT        := man/src
 
+DOC_FILES	 = index.md
+
 include ./tools/mk/Makefile.defs
 ifeq ($(shell uname -s),SunOS)
         include ./tools/mk/Makefile.node_prebuilt.defs
