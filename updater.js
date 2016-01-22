@@ -31,6 +31,9 @@ if (confPath === undefined)
 	confPath = path.join(__dirname, 'etc', 'config.json');
 var conf = config.parse(confPath);
 
+var CF_REAP_TIME = 600;
+var FALLBACK_REAP_TIME = 40;
+
 var client = redis.createClient(conf.redis_opts);
 
 var log = bunyan.createLogger({name: 'cns',
@@ -112,6 +115,7 @@ AppFSM.prototype.state_cfRunning = function (on, once, timeout) {
 	var self = this;
 	cfl.pipe(cff);
 	cff.pipe(cnf);
+	rs.setReapTime(CF_REAP_TIME);
 	rs.start();
 
 	once(cfl, 'bootstrap', function () {
@@ -142,6 +146,7 @@ AppFSM.prototype.state_fallbackFirstPoll = function (on, once, timeout) {
 
 AppFSM.prototype.state_fallback = function (on, once, timeout) {
 	var self = this;
+	rs.setReapTime(FALLBACK_REAP_TIME);
 	rs.start();
 	on(pollTimeEmitter, 'timeout', function () {
 		ps.start();
