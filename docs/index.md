@@ -11,19 +11,9 @@ markdown2extras: tables, code-friendly, cuddled-lists, fenced-code-blocks
     Copyright (c) 2016, Joyent, Inc.
 -->
 
-## GetVersion (GET /version)
+## Ping (GET /ping)
 
-Returns the version string used by the CNS server (same as that returned in the `version.server.` CHAOS record).
-
-| Field     | Type   | Description             |
-| --------- | ------ | ----------------------- |
-| `version` | String | the version information |
-
-Example output:
-
-```json
-{"version":"Triton CNS 0.1.0, node 0.12.9"}
-```
+Returns a good (2xx) response code if the CNS server is up and running.
 
 ## GetVM (GET /vm/:uuid)
 
