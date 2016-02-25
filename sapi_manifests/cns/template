@@ -50,6 +50,8 @@
 
 	"redis_opts": {},
 
+	"binder_domain": "binder.{{{datacenter_name}}}.{{{dns_domain}}}",
+
 	"mahi_opts": {
 		"address": "mahi.{{{datacenter_name}}}.{{{dns_domain}}}"
 	},

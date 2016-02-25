@@ -8,6 +8,7 @@
 
 var redis = require('redis');
 var bunyan = require('bunyan');
+var cueball = require('cueball');
 var util = require('util');
 var changefeed = require('changefeed');
 var ChangefeedFilter = require('./lib/changefeed-filter');
@@ -39,15 +40,29 @@ var client = redis.createClient(conf.redis_opts);
 var log = bunyan.createLogger({name: 'cns',
     level: process.env.LOGLEVEL || 'debug'});
 
-var ps = new PollerStream({log: log, config: conf});
-var cff = new ChangefeedFilter({log: log, config: conf});
-var cnf = new CNFilter({log: log, config: conf});
-var uf = new UfdsFilter({log: log, config: conf});
-var npf = new NetPoolFilter({log: log, config: conf});
-var nf = new NetFilter({log: log, config: conf});
-var ffs = new FlagFilter({log: log, config: conf});
-var s = new UpdateStream({client: client, log: log, config: conf});
-var rs = new ReaperStream({log: log, config: conf, client: client});
+var agent = new cueball.HttpAgent({
+	resolvers: [conf.binder_domain],
+	spares: 2,
+	maximum: 4
+});
+
+/* Common options object for all the streams and filters. */
+var opts = {
+	log: log,
+	config: conf,
+	agent: agent,
+	client: client
+};
+
+var ps = new PollerStream(opts);
+var cff = new ChangefeedFilter(opts);
+var cnf = new CNFilter(opts);
+var uf = new UfdsFilter(opts);
+var npf = new NetPoolFilter(opts);
+var nf = new NetFilter(opts);
+var ffs = new FlagFilter(opts);
+var s = new UpdateStream(opts);
+var rs = new ReaperStream(opts);
 
 var cfOpts = {
 	log: log,

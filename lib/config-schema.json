@@ -52,6 +52,10 @@
         "pattern": "^[0-9.]+(/[0-9]+)?$|^[0-9a-fA-F:]+(/[0-9]+)?$"
       }
     },
+    "binder_domain": {
+      "type": "string",
+      "required": true
+    },
     "mahi_opts": {
       "type": "object",
       "required": true,
