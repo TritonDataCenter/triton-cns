@@ -61,7 +61,6 @@ opts.ufdsPool = createUfdsPool(opts);
 
 var ps = new PollerStream(opts);
 var cff = new ChangefeedFilter(opts);
-var cnf = new CNFilter(opts);
 var uf = new UfdsFilter(opts);
 var nlf = new NAPILegacyFilter(opts);
 var npf = new NetPoolFilter(opts);
@@ -70,9 +69,15 @@ var ffs = new FlagFilter(opts);
 var s = new UpdateStream(opts);
 var rs = new ReaperStream(opts);
 
+/*
+ * These streams can feed back into PollerStream when they have noticed that
+ * there is changed data on their relevant *APIs through some private
+ * mechanism (e.g. UFDS changelogs).
+ */
 opts.pollerStream = ps;
 opts.ufdsCache = uf.cache;
 var uw = new UfdsWatcher(opts);
+var cnf = new CNFilter(opts);
 
 var cfOpts = {
 	log: log,
