@@ -21,6 +21,8 @@ var NetFilter = require('./lib/net-filter');
 var NAPILegacyFilter = require('./lib/napi-legacy-filter');
 var PollerStream = require('./lib/poller-stream');
 var ReaperStream = require('./lib/reaper-stream');
+var createUfdsPool = require('./lib/ufds-pool');
+var UfdsWatcher = require('./lib/ufds-watcher');
 var config = require('./lib/config');
 var path = require('path');
 
@@ -55,6 +57,8 @@ var opts = {
 	client: client
 };
 
+opts.ufdsPool = createUfdsPool(opts);
+
 var ps = new PollerStream(opts);
 var cff = new ChangefeedFilter(opts);
 var cnf = new CNFilter(opts);
@@ -65,6 +69,10 @@ var nf = new NetFilter(opts);
 var ffs = new FlagFilter(opts);
 var s = new UpdateStream(opts);
 var rs = new ReaperStream(opts);
+
+opts.pollerStream = ps;
+opts.ufdsCache = uf.cache;
+var uw = new UfdsWatcher(opts);
 
 var cfOpts = {
 	log: log,

@@ -56,11 +56,19 @@
       "type": "string",
       "required": true
     },
-    "mahi_opts": {
+    "ufds_opts": {
       "type": "object",
       "required": true,
       "properties": {
         "address": {
+          "type": "string",
+          "required": true
+        },
+        "bindDN": {
+          "type": "string",
+          "required": true
+        },
+        "bindPassword": {
           "type": "string",
           "required": true
         }
