@@ -32,6 +32,46 @@ test('processes a single service tag', function (t) {
 	t.end();
 });
 
+test('processes an empty tag', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			triton_cns_enabled: true,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'triton.cns.services': ''}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, []);
+	t.strictEqual(out.operation, 'add');
+	t.end();
+});
+
+test('processes an empty sep tag', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			triton_cns_enabled: true,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'triton.cns.services': ':'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, []);
+	t.strictEqual(out.operation, 'add');
+	t.end();
+});
+
 test('removes from services when CN is down', function (t) {
 	var s = new FlagFilter({});
 	s.write({
