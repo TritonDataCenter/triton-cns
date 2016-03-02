@@ -306,6 +306,41 @@ test('removes all records when vm is destroyed', function (t) {
 	t.end();
 });
 
+test('removes all records when vm has failed', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'failed',
+		owner: {
+			triton_cns_enabled: true,
+			approved_for_provisioning: false
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'triton.cns.services': 'foo'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, []);
+	t.strictEqual(out.operation, 'remove');
+	s.write({
+		uuid: 'abc123',
+		destroyed: true,
+		owner: {
+			triton_cns_enabled: true,
+			approved_for_provisioning: false
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'triton.cns.services': 'foo'}
+	});
+	out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, []);
+	t.strictEqual(out.operation, 'remove');
+	t.end();
+});
+
 test('parses multiple service tags', function (t) {
 	var s = new FlagFilter({});
 	s.write({
