@@ -46,7 +46,15 @@ var log = bunyan.createLogger({name: 'cns',
 var agent = new cueball.HttpAgent({
 	resolvers: [conf.binder_domain],
 	spares: 2,
-	maximum: 4
+	maximum: 4,
+	recovery: {
+		default: {
+			timeout: 2000,
+			retries: 5,
+			delay: 250,
+			maxDelay: 1000
+		}
+	}
 });
 
 /* Common options object for all the streams and filters. */
