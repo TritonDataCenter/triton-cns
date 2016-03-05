@@ -137,7 +137,7 @@ test('with use_login', function (t) {
 	]);
 	var rev = zones['3.2.1.in-addr.arpa']['4'];
 	t.deepEqual(rev, [
-	    {constructor: 'PTR', args: ['abc123.inst.def432.foo']}
+	    {constructor: 'PTR', args: ['abc123.inst.bar.foo']}
 	]);
 
 	t.end();
@@ -379,6 +379,56 @@ test('multi-zone, shortest zone priority PTR', function (t) {
 	var rev = zones['3.2.1.in-addr.arpa']['4'];
 	t.deepEqual(rev, [
 	    {constructor: 'PTR', args: ['test.inst.bar.baz']}
+	]);
+
+	t.end();
+});
+
+test('service with srvs', function (t) {
+	var config = {
+	    use_alias: true,
+	    forward_zones: {
+		'foo': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    alias: 'test',
+	    services: [
+	        { name: 'svc1', ports: [1234, 1235] }
+	    ],
+	    operation: 'add',
+	    owner: {
+		uuid: 'def432'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+
+	t.deepEqual(Object.keys(zones['foo']),
+	    ['abc123.inst.def432', 'test.inst.def432', 'svc1.svc.def432']);
+
+	var fwd = zones['foo']['test.inst.def432'];
+	t.deepEqual(fwd, [
+	    {constructor: 'A', args: ['1.2.3.4']},
+	    {constructor: 'TXT', args: ['abc123']}
+	]);
+
+	var svc = zones['foo']['svc1.svc.def432'];
+	t.deepEqual(svc, [
+	    {constructor: 'A', args: ['1.2.3.4'], src: 'abc123'},
+	    {constructor: 'TXT', args: ['abc123'], src: 'abc123'},
+	    {constructor: 'SRV', args: ['test.inst.def432.foo', 1234],
+	        src: 'abc123'},
+	    {constructor: 'SRV', args: ['test.inst.def432.foo', 1235],
+	        src: 'abc123'}
 	]);
 
 	t.end();

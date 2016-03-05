@@ -217,7 +217,7 @@ test('generate some services', function (t) {
 	s.openSerial(false);
 	s.write({
 		uuid: 'abc1',
-		services: ['test'],
+		services: [ { name: 'test', ports: [] } ],
 		operation: 'add',
 		owner: {
 			uuid: 'def432'
@@ -231,7 +231,7 @@ test('generate some services', function (t) {
 	});
 	s.write({
 		uuid: 'abc2',
-		services: ['test'],
+		services: [ { name: 'test', ports: [] } ],
 		operation: 'add',
 		owner: {
 			uuid: 'def432'
@@ -337,6 +337,155 @@ test('serves service TXT records', function (t) {
 			return (a.data);
 		}).sort();
 		t.deepEqual(datas, [ [ 'abc1' ], [ 'abc2' ] ]);
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
+test('services with ports (SRV)', function (t) {
+	++currentSerial;
+
+	var s = new UpdateStream({
+		client: redis,
+		config: {
+			forward_zones: {
+				'foo': {}
+			},
+			reverse_zones: {}
+		}
+	});
+	s.openSerial(false);
+	s.write({
+		uuid: 'abc1',
+		services: [ { name: 'test', ports: [1234] } ],
+		operation: 'add',
+		owner: {
+			uuid: 'def432'
+		},
+		nics: [
+			{
+				ip: '1.2.3.5',
+				zones: ['foo']
+			}
+		]
+	});
+	s.write({
+		uuid: 'abc2',
+		services: [ { name: 'test', ports: [1234, 1235] } ],
+		operation: 'add',
+		owner: {
+			uuid: 'def432'
+		},
+		nics: [
+			{
+				ip: '1.2.3.6',
+				zones: ['foo']
+			}
+		]
+	});
+	s.once('finish', function () {
+		s.closeSerial(function () {
+			t.end();
+		});
+	});
+	s.end();
+});
+
+test('serves zone SOA', function (t) {
+	var q = dns.Question({
+		name: 'foo',
+		type: 'SOA'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.equal(answer.header.rcode,
+		    dns.consts.NAME_TO_RCODE['NOERROR']);
+		t.equal(answer.answer.length, 1);
+		var soa = answer.answer[0];
+		t.strictEqual(soa.name, 'foo');
+		t.equal(soa.serial, 4);
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
+test('serves service A records', function (t) {
+	var q = dns.Question({
+		name: 'test.svc.def432.foo',
+		type: 'A'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.equal(answer.answer.length, 2);
+		var ttls = answer.answer.map(function (a) {
+			return (a.ttl);
+		});
+		t.deepEqual(ttls, [30, 30]);
+		var addrs = answer.answer.map(function (a) {
+			return (a.address);
+		}).sort();
+		t.deepEqual(addrs, ['1.2.3.5', '1.2.3.6']);
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
+test('serves service SRV records', function (t) {
+	var q = dns.Question({
+		name: 'test.svc.def432.foo',
+		type: 'SRV'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.equal(answer.answer.length, 3);
+		var ttls = answer.answer.map(function (a) {
+			return (a.ttl);
+		});
+		t.deepEqual(ttls, [30, 30, 30]);
+		var recs = answer.answer.map(function (a) {
+			return ({target: a.target, port: a.port});
+		}).sort();
+		t.deepEqual(recs, [
+		    {target: 'abc1.inst.def432.foo', port: 1234},
+		    {target: 'abc2.inst.def432.foo', port: 1234},
+		    {target: 'abc2.inst.def432.foo', port: 1235}]);
+		var addns = answer.additional.map(function (a) {
+			return ({name: a.name, address: a.address});
+		}).sort();
+		t.deepEqual(addns, []);
 	});
 	req.once('end', function () {
 		t.end();

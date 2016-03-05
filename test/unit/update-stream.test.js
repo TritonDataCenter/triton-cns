@@ -369,7 +369,7 @@ test('writes records for a service', function (t) {
 	s.openSerial(false);
 	s.write({
 		uuid: 'abc123',
-		services: ['bar'],
+		services: [ { name: 'bar', ports: [] } ],
 		operation: 'add',
 		owner: {
 			uuid: 'def432'
@@ -383,7 +383,7 @@ test('writes records for a service', function (t) {
 	});
 	s.write({
 		uuid: 'abcd1234',
-		services: ['bar'],
+		services: [ { name: 'bar', ports: [] } ],
 		operation: 'add',
 		owner: {
 			uuid: 'def432'
@@ -451,7 +451,7 @@ test('service with zones with multiple nics', function (t) {
 	s.openSerial(false);
 	s.write({
 		uuid: 'abc123',
-		services: ['bar'],
+		services: [ { name: 'bar', ports: [] } ],
 		operation: 'add',
 		owner: {
 			uuid: 'def432'
@@ -469,7 +469,7 @@ test('service with zones with multiple nics', function (t) {
 	});
 	s.write({
 		uuid: 'abcd1234',
-		services: ['bar'],
+		services: [ { name: 'bar', ports: [] } ],
 		operation: 'add',
 		owner: {
 			uuid: 'def432'

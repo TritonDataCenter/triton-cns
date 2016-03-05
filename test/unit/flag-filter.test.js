@@ -27,7 +27,7 @@ test('processes a single service tag', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'add');
 	t.end();
 });
@@ -131,7 +131,7 @@ test('adds back into services when metadata flag up', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'add');
 	t.end();
 });
@@ -151,7 +151,7 @@ test('removes all records when user flag is off', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'remove');
 	t.end();
 });
@@ -174,7 +174,7 @@ test('keeps records when PTR tag is set with user flag', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'add');
 	t.strictEqual(out.ptrname, 'foobar.com');
 	t.end();
@@ -198,7 +198,7 @@ test('removes all records when ptr is invalid', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'remove');
 	t.strictEqual(out.hasOwnProperty('ptrname'), false);
 	t.end();
@@ -222,7 +222,7 @@ test('removes all records when vm tag is set', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'remove');
 	t.end();
 });
@@ -246,7 +246,7 @@ test('removes all records when vm tag is set even with ptr', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'remove');
 	t.end();
 });
@@ -266,7 +266,7 @@ test('removes all records when user is unapproved', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
 	t.strictEqual(out.operation, 'remove');
 	t.end();
 });
@@ -356,7 +356,28 @@ test('parses multiple service tags', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo', 'bar', 'test']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] },
+	    { name: 'bar', ports: [] }, { name: 'test', ports: [] } ]);
+	t.strictEqual(out.operation, 'add');
+	t.end();
+});
+
+test('parses service tags with ports', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			triton_cns_enabled: true,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'triton.cns.services': 'foo:1234,foo:1235'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [1234, 1235] } ]);
 	t.strictEqual(out.operation, 'add');
 	t.end();
 });
@@ -372,11 +393,12 @@ test('parses service tags with future-compatible args', function (t) {
 		},
 		server: {status: 'running'},
 		customer_metadata: {},
-		tags: {'triton.cns.services': 'foo:test=something,bar'}
+		tags: {'triton.cns.services': 'foo:1234:test=something,bar'}
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, ['foo', 'bar']);
+	t.deepEqual(out.services, [ { name: 'foo', ports: [1234] },
+	    { name: 'bar', ports: [] } ]);
 	t.strictEqual(out.operation, 'add');
 	t.end();
 });
