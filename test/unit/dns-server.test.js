@@ -485,7 +485,10 @@ test('serves service SRV records', function (t) {
 		var addns = answer.additional.map(function (a) {
 			return ({name: a.name, address: a.address});
 		}).sort();
-		t.deepEqual(addns, []);
+		t.deepEqual(addns, [
+		    {name: 'abc1.inst.def432.foo', address: '1.2.3.5'},
+		    {name: 'abc2.inst.def432.foo', address: '1.2.3.6'}
+		]);
 	});
 	req.once('end', function () {
 		t.end();
