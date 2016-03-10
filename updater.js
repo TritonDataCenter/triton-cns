@@ -120,7 +120,8 @@ AppFSM.prototype.state_initial = function (on, once, timeout) {
 
 	ps.pipe(cnf);
 	cnf.pipe(uf);
-	uf.pipe(npf);
+	uf.pipe(nlf);
+	nlf.pipe(npf);
 	npf.pipe(nf);
 	nf.pipe(ffs);
 	ffs.pipe(s);
