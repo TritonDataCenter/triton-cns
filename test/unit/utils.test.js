@@ -18,18 +18,18 @@ test('currentSerial', function (t) {
 
 	function MockDate() {
 	}
-	MockDate.prototype.getYear =
-	    function () { return (fixedDate.getYear()); };
-	MockDate.prototype.getMonth =
-	    function () { return (fixedDate.getMonth()); };
-	MockDate.prototype.getDate =
-	    function () { return (fixedDate.getDate()); };
-	MockDate.prototype.getHours =
-	    function () { return (fixedDate.getHours()); };
-	MockDate.prototype.getMinutes =
-	    function () { return (fixedDate.getMinutes()); };
-	MockDate.prototype.getSeconds =
-	    function () { return (fixedDate.getSeconds()); };
+	MockDate.prototype.getUTCFullYear =
+	    function () { return (fixedDate.getUTCFullYear()); };
+	MockDate.prototype.getUTCMonth =
+	    function () { return (fixedDate.getUTCMonth()); };
+	MockDate.prototype.getUTCDate =
+	    function () { return (fixedDate.getUTCDate()); };
+	MockDate.prototype.getUTCHours =
+	    function () { return (fixedDate.getUTCHours()); };
+	MockDate.prototype.getUTCMinutes =
+	    function () { return (fixedDate.getUTCMinutes()); };
+	MockDate.prototype.getUTCSeconds =
+	    function () { return (fixedDate.getUTCSeconds()); };
 
 	t.test('setup sandbox', function (tt) {
 		sandbox = sinon.sandbox.create();
@@ -38,14 +38,14 @@ test('currentSerial', function (t) {
 	});
 	t.test('currentSerial returns the correct serial', function (tt) {
 		var s = utils.currentSerial();
-		tt.strictEqual(s, 372019824);
+		tt.strictEqual(s, 372030984);
 		tt.end();
 	});
 	t.test('currentSerial increments every 10 secs', function (tt) {
 		fixedDate.setSeconds(4);
-		tt.strictEqual(utils.currentSerial(), 372019824);
+		tt.strictEqual(utils.currentSerial(), 372030984);
 		fixedDate.setSeconds(11);
-		tt.strictEqual(utils.currentSerial(), 372019825);
+		tt.strictEqual(utils.currentSerial(), 372030985);
 		tt.end();
 	});
 	t.test('cleanup sandbox', function (tt) {

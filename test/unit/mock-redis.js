@@ -86,6 +86,30 @@ MockRedis.prototype.lrange = function (key, from, to, cb) {
 	v = v.slice(from, to);
 	cb(null, v);
 };
+MockRedis.prototype.lpush = function () {
+	var args = Array.prototype.slice.call(arguments);
+	var key = args.shift();
+	assert.string(key, 'key');
+	var cb = args.pop();
+	if (typeof (cb) !== 'function') {
+		assert.string(cb);
+		args.push(cb);
+		cb = undefined;
+	}
+	assert.arrayOfString(args);
+	var val = this.db[key];
+	if (val === undefined)
+		val = [];
+	if (!Array.isArray(val)) {
+		if (cb)
+			cb(new TypeError('key is not an array'));
+		return;
+	}
+	val = args.concat(val);
+	this.db[key] = val;
+	if (cb)
+		cb(null);
+};
 MockRedis.prototype.rpush = function () {
 	var args = Array.prototype.slice.call(arguments);
 	var key = args.shift();
@@ -106,6 +130,23 @@ MockRedis.prototype.rpush = function () {
 		return;
 	}
 	val = val.concat(args);
+	this.db[key] = val;
+	if (cb)
+		cb(null);
+};
+MockRedis.prototype.ltrim = function (key, min, max, cb) {
+	assert.string(key, 'key');
+	assert.number(min, 'min index');
+	assert.number(max, 'max index');
+	var val = this.db[key];
+	if (val === undefined)
+		val = [];
+	if (!Array.isArray(val)) {
+		if (cb)
+			cb(new TypeError('key is not an array'));
+		return;
+	}
+	val = val.slice(min, max);
 	this.db[key] = val;
 	if (cb)
 		cb(null);
