@@ -49,7 +49,8 @@ test('create basic dataset', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -218,7 +219,8 @@ test('generate some services', function (t) {
 	s.write({
 		uuid: 'abc1',
 		services: [ { name: 'test', ports: [] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -232,7 +234,8 @@ test('generate some services', function (t) {
 	s.write({
 		uuid: 'abc2',
 		services: [ { name: 'test', ports: [] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -360,7 +363,8 @@ test('services with ports (SRV)', function (t) {
 	s.write({
 		uuid: 'abc1',
 		services: [ { name: 'test', ports: [1234] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -374,7 +378,8 @@ test('services with ports (SRV)', function (t) {
 	s.write({
 		uuid: 'abc2',
 		services: [ { name: 'test', ports: [1234, 1235] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},

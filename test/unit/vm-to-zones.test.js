@@ -26,7 +26,8 @@ test('basic single container', function (t) {
 	var vm = {
 	    uuid: 'abc123',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432'
 	    },
@@ -68,7 +69,8 @@ test('with use_alias', function (t) {
 	    uuid: 'abc123',
 	    alias: 'test',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432'
 	    },
@@ -111,7 +113,8 @@ test('with use_login', function (t) {
 	    uuid: 'abc123',
 	    alias: 'test',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432',
 		login: 'bar'
@@ -156,7 +159,8 @@ test('with use_alias and use_login', function (t) {
 	    uuid: 'abc123',
 	    alias: 'test',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432',
 		login: 'bar'
@@ -203,7 +207,8 @@ test('using a PTR name', function (t) {
 	    alias: 'test',
 	    services: [],
 	    ptrname: 'test.something.com',
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432',
 		login: 'bar'
@@ -240,7 +245,8 @@ test('multi-zone', function (t) {
 	    uuid: 'abc123',
 	    alias: 'test',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432',
 		login: 'bar'
@@ -301,7 +307,8 @@ test('multi-zone, single PTRs', function (t) {
 	    uuid: 'abc123',
 	    alias: 'test',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432',
 		login: 'bar'
@@ -362,7 +369,8 @@ test('multi-zone, shortest zone priority PTR', function (t) {
 	    uuid: 'abc123',
 	    alias: 'test',
 	    services: [],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432',
 		login: 'bar'
@@ -398,7 +406,8 @@ test('service with srvs', function (t) {
 	    services: [
 	        { name: 'svc1', ports: [1234, 1235] }
 	    ],
-	    operation: 'add',
+	    listInstance: true,
+	    listServices: true,
 	    owner: {
 		uuid: 'def432'
 	    },

@@ -28,7 +28,8 @@ test('processes a single service tag', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });
 
@@ -48,7 +49,8 @@ test('processes an empty tag', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });
 
@@ -68,7 +70,8 @@ test('processes an empty sep tag', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });
 
@@ -87,8 +90,9 @@ test('removes from services when CN is down', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'add');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -109,8 +113,9 @@ test('removes from services when metadata flag not up', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'add');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -132,7 +137,8 @@ test('adds back into services when metadata flag up', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });
 
@@ -152,7 +158,8 @@ test('removes all records when user flag is off', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'remove');
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -175,7 +182,8 @@ test('keeps records when PTR tag is set with user flag', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, false);
 	t.strictEqual(out.ptrname, 'foobar.com');
 	t.end();
 });
@@ -199,7 +207,8 @@ test('removes all records when ptr is invalid', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'remove');
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.strictEqual(out.hasOwnProperty('ptrname'), false);
 	t.end();
 });
@@ -223,7 +232,8 @@ test('removes all records when vm tag is set', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'remove');
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -247,7 +257,8 @@ test('removes all records when vm tag is set even with ptr', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'remove');
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -267,7 +278,8 @@ test('removes all records when user is unapproved', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
-	t.strictEqual(out.operation, 'remove');
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -286,8 +298,9 @@ test('removes all records when vm is destroyed', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'remove');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	s.write({
 		uuid: 'abc123',
 		destroyed: true,
@@ -301,8 +314,9 @@ test('removes all records when vm is destroyed', function (t) {
 	});
 	out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'remove');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -321,8 +335,9 @@ test('removes all records when vm has failed', function (t) {
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'remove');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	s.write({
 		uuid: 'abc123',
 		destroyed: true,
@@ -336,8 +351,9 @@ test('removes all records when vm has failed', function (t) {
 	});
 	out = s.read();
 	t.strictEqual(typeof (out), 'object');
-	t.deepEqual(out.services, []);
-	t.strictEqual(out.operation, 'remove');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
 	t.end();
 });
 
@@ -358,7 +374,8 @@ test('parses multiple service tags', function (t) {
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [] },
 	    { name: 'bar', ports: [] }, { name: 'test', ports: [] } ]);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });
 
@@ -378,7 +395,8 @@ test('parses service tags with ports', function (t) {
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [1234, 1235] } ]);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });
 
@@ -399,6 +417,7 @@ test('parses service tags with future-compatible args', function (t) {
 	t.strictEqual(typeof (out), 'object');
 	t.deepEqual(out.services, [ { name: 'foo', ports: [1234] },
 	    { name: 'bar', ports: [] } ]);
-	t.strictEqual(out.operation, 'add');
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
 	t.end();
 });

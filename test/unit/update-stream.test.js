@@ -69,7 +69,9 @@ test('writes records for one container', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
+		reasons: [],
 		owner: {
 			uuid: 'def432'
 		},
@@ -146,7 +148,9 @@ test('deletes records for one container', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
+		reasons: [],
 		owner: {
 			uuid: 'def432'
 		},
@@ -162,7 +166,9 @@ test('deletes records for one container', function (t) {
 			s.write({
 				uuid: 'abc123',
 				services: [],
-				operation: 'remove',
+				listInstance: false,
+				listServices: false,
+				reasons: [],
 				owner: {
 					uuid: 'def432'
 				},
@@ -246,7 +252,8 @@ test('updates records upon a change of IP', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -262,7 +269,8 @@ test('updates records upon a change of IP', function (t) {
 			s.write({
 				uuid: 'abc123',
 				services: [],
-				operation: 'add',
+				listInstance: true,
+				listServices: true,
 				owner: {
 					uuid: 'def432'
 				},
@@ -370,7 +378,9 @@ test('writes records for a service', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [ { name: 'bar', ports: [] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
+		reasons: [],
 		owner: {
 			uuid: 'def432'
 		},
@@ -384,7 +394,8 @@ test('writes records for a service', function (t) {
 	s.write({
 		uuid: 'abcd1234',
 		services: [ { name: 'bar', ports: [] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -452,7 +463,8 @@ test('service with zones with multiple nics', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [ { name: 'bar', ports: [] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -470,7 +482,8 @@ test('service with zones with multiple nics', function (t) {
 	s.write({
 		uuid: 'abcd1234',
 		services: [ { name: 'bar', ports: [] } ],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -541,7 +554,8 @@ test('container with ipv6 addresses', function (t) {
 	s.write({
 		uuid: 'abc123',
 		services: [],
-		operation: 'add',
+		listInstance: true,
+		listServices: true,
 		owner: {
 			uuid: 'def432'
 		},
@@ -623,7 +637,8 @@ test('add, delete-add race against commit', function (t) {
 				s.write({
 					uuid: 'abc123',
 					services: [],
-					operation: 'add',
+					listInstance: true,
+					listServices: true,
 					owner: {
 						uuid: 'def432'
 					},
@@ -639,7 +654,8 @@ test('add, delete-add race against commit', function (t) {
 				s.write({
 					uuid: 'abc123',
 					services: [],
-					operation: 'add',
+					listInstance: true,
+					listServices: true,
 					owner: {
 						uuid: 'def432'
 					},
@@ -667,7 +683,8 @@ test('add, delete-add race against commit', function (t) {
 				s.write({
 					uuid: 'abc123',
 					services: [],
-					operation: 'remove',
+					listInstance: false,
+					listServices: false,
 					owner: {
 						uuid: 'def432'
 					},
@@ -684,7 +701,8 @@ test('add, delete-add race against commit', function (t) {
 				s.write({
 					uuid: 'abc123',
 					services: [],
-					operation: 'add',
+					listInstance: true,
+					listServices: true,
 					owner: {
 						uuid: 'def432'
 					},
