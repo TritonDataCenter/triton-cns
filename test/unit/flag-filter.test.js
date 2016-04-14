@@ -84,7 +84,7 @@ test('removes from services when CN is down', function (t) {
 			triton_cns_enabled: true,
 			approved_for_provisioning: true
 		},
-		server: {status: 'unknown'},
+		server: {status: 'unknown', down: true},
 		customer_metadata: {},
 		tags: {'triton.cns.services': 'foo'}
 	});
