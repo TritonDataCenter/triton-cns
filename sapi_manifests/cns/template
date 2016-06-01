@@ -71,10 +71,6 @@
 		"limit": {{#vmapi_limit}}{{{vmapi_limit}}}{{/vmapi_limit}}{{^vmapi_limit}}500{{/vmapi_limit}}
 	},
 
-	"api_server": {
-		"listen": ["127.0.0.1", "::1", "{{{SERVICE_DOMAIN}}}"]
-	},
-
 	"changefeed_opts": {
 		"resource": "vm",
 		"subResources": ["alias","customer_metadata","destroyed","internal_metadata","nics","owner_uuid","server_uuid","state","tags"],

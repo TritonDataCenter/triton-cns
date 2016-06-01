@@ -26,19 +26,6 @@
       "type": "object",
       "required": true
     },
-    "api_server": {
-      "type": "object",
-      "required": true,
-      "properties": {
-        "listen": {
-          "type": "array",
-          "required": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "use_login": {
       "type": "boolean"
     },

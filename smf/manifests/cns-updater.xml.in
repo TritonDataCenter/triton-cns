@@ -40,7 +40,7 @@
       exec="node --abort_on_uncaught_exception updater.js &amp;"
       timeout_seconds="30">
       <method_context working_directory="/opt/triton/cns">
-        <method_credential user="nobody"
+        <method_credential user="cns"
           group="nobody"
           privileges="basic"/>
         <method_environment>
