@@ -159,3 +159,38 @@ Example output:
   }
 ]
 ```
+
+## SuffixesForVM (POST /suffixes-for-vm)
+
+Takes a prototype VM object representing a machine that has not been created
+yet, and returns a list of DNS suffixes that should be placed in its
+`/etc/resolv.conf` file if it is to find other CNS names on the same networks
+that it uses.
+
+The prototype VM must be given as the body of the request, in JSON format.
+
+The dummy VM object must include the fields `owner_uuid` (a String) and
+`networks` (an Array of Strings, UUIDs of the networks the VM will be
+using).
+
+Example input:
+
+```json
+{
+  "owner_uuid": "974350ea-2910-11e6-84b0-3b210d147f77",
+  "networks": [
+    "9c9b499e-2910-11e6-9958-478422bd4072"
+  ]
+}
+```
+
+Example output:
+
+```json
+{
+  "suffixes": [
+    "svc.user.us-west-1.triton.zone",
+    "inst.user.us-west-1.triton.zone"
+  ]
+}
+```
