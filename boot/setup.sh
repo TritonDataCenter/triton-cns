@@ -57,7 +57,8 @@ source /opt/smartdc/boot/lib/util.sh
 sdc_common_setup
 
 echo "Adding CNS user"
-useradd -d /opt/triton/cns -P 'Metadata Reader' cns
+useradd -d /opt/triton/cns -P 'Metadata Reader' cns || \
+    fatal "failed to create user"
 
 echo "Installing cns redis"
 sdc_setup_redis
