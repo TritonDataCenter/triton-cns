@@ -132,3 +132,24 @@ test('wildcard does not match if an exact is present after', function (t) {
 	t.deepEqual(out.nics[0].zones, ['foo']);
 	t.end();
 });
+
+test('refuses admin network', function (t) {
+	var config = {
+		foo: {
+			networks: ['abc123']
+		}
+	};
+	var s = new NetFilter({config: {forward_zones: config}});
+	s.write({
+		uuid: 'abcd1234',
+		nics: [{
+			network_uuid: 'abc123',
+			nic_tag: 'admin',
+			vlan_id: 0
+		}]
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.nics[0].zones, []);
+	t.end();
+});
