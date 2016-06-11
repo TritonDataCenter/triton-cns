@@ -57,6 +57,49 @@ test('basic single container', function (t) {
 	t.end();
 });
 
+test('cloudapi instance', function (t) {
+	var config = {
+	    forward_zones: {
+		'foo': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    services: [ { name: 'cloudapi', ports: [] } ],
+	    listInstance: true,
+	    listServices: true,
+	    owner: {
+		uuid: 'def432',
+		login: 'admin'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+
+	t.deepEqual(Object.keys(zones['foo']), [
+	    'abc123.inst.def432', 'cloudapi.svc.def432', 'cloudapi']);
+	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
+
+	var fwd = zones['foo']['cloudapi'];
+	t.deepEqual(fwd, [
+	    {constructor: 'A', args: ['1.2.3.4'], src: 'abc123'},
+	    {constructor: 'TXT', args: ['abc123'], src: 'abc123'}
+	]);
+	var rev = zones['3.2.1.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['abc123.inst.def432.foo']}
+	]);
+
+	t.end();
+});
+
 test('with use_alias', function (t) {
 	var config = {
 	    use_alias: true,

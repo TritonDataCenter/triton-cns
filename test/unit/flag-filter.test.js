@@ -283,6 +283,69 @@ test('removes all records when user is unapproved', function (t) {
 	t.end();
 });
 
+test('lists VMs owned by admin with a service', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			login: 'admin',
+			approved_for_provisioning: false
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'triton.cns.services': 'foo'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ { name: 'foo', ports: [] } ]);
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
+	t.end();
+});
+
+test('accepts smartdc_role tag on admin VMs', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			login: 'admin',
+			approved_for_provisioning: false
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'smartdc_role': 'cloudapi'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ { name: 'cloudapi', ports: [] } ]);
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
+	t.end();
+});
+
+test('does not accept smartdc_role tag on non-admin', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			login: 'george',
+			approved_for_provisioning: false
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'smartdc_role': 'cloudapi'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
+	t.end();
+});
+
 test('removes all records when vm is destroyed', function (t) {
 	var s = new FlagFilter({});
 	s.write({
