@@ -41,6 +41,7 @@
     "restify-errors": "4.2.0",
     "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git",
     "sprintf-js": "^1.0.3",
+    "triton-tags": "^1.1.0",
     "uuid": "2.0.1",
     "vasync": "1.6.3"
   }
