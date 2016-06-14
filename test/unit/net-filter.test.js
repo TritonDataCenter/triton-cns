@@ -142,11 +142,11 @@ test('refuses admin network', function (t) {
 	var s = new NetFilter({config: {forward_zones: config}});
 	s.write({
 		uuid: 'abcd1234',
-		nics: [{
+		nics: [ {
 			network_uuid: 'abc123',
 			nic_tag: 'admin',
 			vlan_id: 0
-		}]
+		} ]
 	});
 	var out = s.read();
 	t.strictEqual(typeof (out), 'object');
