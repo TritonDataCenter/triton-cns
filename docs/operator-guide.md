@@ -211,7 +211,9 @@ called `dc` with a DNS suffix of `joyent.us`.
 Currently this CNS will generate records under the DNS zone `dc.cns.joyent.us`
 for all enabled VMs in the datacenter on all networks (indicated by the `*`).
 It is not set up to allow any replication peers, and is not configured as a
-Hidden Primary.
+Hidden Primary. Note that "enabled VMs" refers to those belonging to SDC
+accounts with the `triton_cns_enabled` flag set (see the
+[user documentation for CNS](https://docs.joyent.com/public-cloud/network/cns/usage)).
 
 An example instance record in this zone could look like
 `example.inst.6bfa28b6-e64c-11e5-adf5-5703f12edb00.dc.cns.joyent.us` (the zone
@@ -394,6 +396,84 @@ PEER         ZONE                     LATEST SERIAL  DRIFT  VERSION
 10.0.1.10    1.0.10.in-addr.arpa      373423966             ISC BIND 9.10.2-P1
              dc.cns.joyent.us         373423966
 ```
+
+### Extra debugging information about record generation
+
+One of the most common problems encountered in new setups is that CNS is not
+generating all the records expected by a user. To debug CNS's decision-making
+process to see why it did not list a VM's records in the way you expected, the
+logs of the `cns-updater` service are useful.
+
+The `cns-updater` logs include a `DEBUG` level message for every time CNS
+examines a VM and decides what records should be created, which includes
+reasoning tags as to what criteria influenced the decision.
+
+For example, to look at CNS's reasoning about the VM with UUID
+`99a430dd-88a3-4cc4-9046-c76810491445`, use the following command inside the
+CNS zone:
+
+```
+# cat $(svcs -L cns-updater) | grep 99a430dd-88a3-4cc4-9046-c76810491445 | bunyan
+```
+
+The log messages with reasoning information will look like this:
+
+```
+[2016-07-06T17:38:28.294Z] DEBUG: cns/24595 on 859bd73b-9766-444b-ac8d-ea2f8209fea8: updating vm (stage=UpdateStream)
+    info: {
+      "vm": "99a430dd-88a3-4cc4-9046-c76810491445",
+      "why": [
+        "vm_down"
+      ],
+      "l_s": false,
+      "l_i": true,
+      "svcs": [
+        {
+          "name": "gerrit",
+          "ports": []
+        }
+      ],
+      "c": {
+        "staging-1.cns.joyent.us": 4,
+        "3.26.172.in-addr.arpa": 1
+      },
+      "o": "reaper"
+    }
+```
+
+The exact fields here are subject to change since they are not a guaranteed
+API, but below are their definitions at the time of writing:
+
+ - `"vm"` contains the VM's UUID
+ - `"l_s"` means "list services" -- if it's true, CNS decided to generate
+   service records for this VM (`.svc.`)
+ - `"l_i"` means "list instance" -- if it's true, CNS decided to generate
+   instance records
+ - `"svcs"` contains an array of all the recognized services in this VM's
+   `triton.cns.services` tag
+ - `"c"` contains *counts* of final generated records within each DNS zone
+ - `"o"` shows the origin of this visit to the VM (the reason why CNS was
+   looking at it to begin with)
+ - `"why"` contains a list of all the decision flags that affected this VM
+
+Some examples of decision flags that may be seen in the `"why"` field:
+
+ - `"user_en_flag"` -- VM not listed at all because user does not have
+                       `triton_cns_enabled` flag set
+ - `"user_not_approved"` -- VM not listed at all because user is not
+                            approved for provisioning
+ - `"inst_en_tag"` -- VM not listed at all because it has the
+                      `triton.cns.disable` tag set
+ - `"inst_en_flag"` -- VM was removed from services because it has the
+                       `triton.cns.status` metadata key set to `down`
+ - `"cn_down"` -- VM was removed from services because the CN it runs on
+                  seems to be down
+ - `"vm_down"` -- VM was removed from services because it is stopped
+ - `"invalid_tag"` -- the VM's `triton.cns.services` tag could not be parsed
+                      so no services listings are possible
+
+This is not an exhaustive list, but covers the most commonly encountered cases
+(due to e.g. forgetting to set the user enabled flag or issues with tags).
 
 ### Extra debugging information about replication
 
