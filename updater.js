@@ -35,7 +35,7 @@ if (confPath === undefined)
 	confPath = path.join(__dirname, 'etc', 'config.json');
 var conf = config.parse(confPath);
 
-var CF_REAP_TIME = 3600;
+var CF_REAP_TIME = 3600 * 12;
 var FALLBACK_REAP_TIME = 40;
 
 var client = redis.createClient(conf.redis_opts);
