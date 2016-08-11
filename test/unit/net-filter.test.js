@@ -133,6 +133,29 @@ test('wildcard does not match if an exact is present after', function (t) {
 	t.end();
 });
 
+test('multiple wildcards', function (t) {
+	var config = {
+		bar: {
+			networks: ['*']
+		},
+		foo: {
+			networks: ['abc123']
+		},
+		derp: {
+			networks: ['*']
+		}
+	};
+	var s = new NetFilter({config: {forward_zones: config}});
+	s.write({
+		uuid: 'abcd1234',
+		nics: [ { network_uuid: 'def123' } ]
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.nics[0].zones, ['bar', 'derp']);
+	t.end();
+});
+
 test('refuses admin network', function (t) {
 	var config = {
 		foo: {
