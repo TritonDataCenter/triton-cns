@@ -39,7 +39,7 @@
     "restify": "4.0.3",
     "restify-clients": "1.1.1",
     "restify-errors": "4.2.0",
-    "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git",
+    "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git#d01c308",
     "sprintf-js": "^1.0.3",
     "triton-tags": "^1.1.2",
     "uuid": "2.0.1",
