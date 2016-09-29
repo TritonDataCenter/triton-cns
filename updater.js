@@ -74,7 +74,7 @@ var nlf = new NAPILegacyFilter(opts);
 var npf = new NetPoolFilter(opts);
 var nf = new NetFilter(opts);
 var ffs = new FlagFilter(opts);
-var s = new UpdateStream(opts);
+var us = new UpdateStream(opts);
 var rs = new ReaperStream(opts);
 
 /*
@@ -115,86 +115,80 @@ function AppFSM() {
 }
 util.inherits(AppFSM, FSM);
 
-AppFSM.prototype.state_initial = function (on, once, timeout) {
-	var self = this;
-
+AppFSM.prototype.state_initial = function (S) {
 	ps.pipe(cnf);
 	cnf.pipe(uf);
 	uf.pipe(nlf);
 	nlf.pipe(npf);
 	npf.pipe(nf);
 	nf.pipe(ffs);
-	ffs.pipe(s);
+	ffs.pipe(us);
 	rs.pipe(cnf);
 
-	once(cfl, 'bootstrap', function () {
-		self.gotoState('cfFirstPoll');
+	S.on(cfl, 'bootstrap', function () {
+		S.gotoState('cfFirstPoll');
 	});
-	once(cfl, 'error', function () {
-		self.gotoState('fallbackFirstPoll');
+	S.on(cfl, 'error', function () {
+		S.gotoState('fallbackFirstPoll');
 	});
 	cfl.register();
 };
 
-AppFSM.prototype.state_cfFirstPoll = function (on, once, timeout) {
-	var self = this;
-	s.openSerial(false);
+AppFSM.prototype.state_cfFirstPoll = function (S) {
+	us.openSerial(false);
 	ps.start();
-	once(ps, 'pollFinish', function () {
+	S.on(ps, 'pollFinish', function () {
 		log.info('Poll done, committing...');
-		s.closeSerial();
-		self.gotoState('cfRunning');
+		us.closeSerial();
+		S.gotoState('cfRunning');
 	});
-	once(cfl, 'error', function () {
-		self.gotoState('fallbackFirstPoll');
+	S.on(cfl, 'error', function () {
+		S.gotoState('fallbackFirstPoll');
 	});
 };
 
-AppFSM.prototype.state_cfRunning = function (on, once, timeout) {
-	var self = this;
+AppFSM.prototype.state_cfRunning = function (S) {
 	cfl.pipe(cff);
 	cff.pipe(cnf);
 	rs.setReapTime(CF_REAP_TIME);
 	rs.start();
 
-	once(cfl, 'bootstrap', function () {
-		self.gotoState('cfFirstPoll');
+	S.on(cfl, 'bootstrap', function () {
+		S.gotoState('cfFirstPoll');
 	});
 
-	once(cfl, 'error', function () {
-		self.gotoState('fallback');
+	S.on(cfl, 'error', function () {
+		S.gotoState('fallback');
 	});
 };
 
-AppFSM.prototype.state_fallbackFirstPoll = function (on, once, timeout) {
-	var self = this;
-	s.openSerial(false);
+AppFSM.prototype.state_fallbackFirstPoll = function (S) {
+	us.openSerial(false);
 	ps.start();
-	once(ps, 'pollFinish', function () {
+	S.on(ps, 'pollFinish', function () {
 		log.info('Poll done, committing...');
-		s.closeSerial();
-		self.gotoState('fallback');
+		us.closeSerial();
+		S.gotoState('fallback');
 	});
-	on(cfl, 'error', function () {
+	S.on(cfl, 'error', function () {
 		/* Ignore any CF errors while in fallback mode. */
 	});
-	once(cfl, 'bootstrap', function () {
-		self.gotoState('cfFirstPoll');
+	S.on(cfl, 'bootstrap', function () {
+		S.gotoState('cfFirstPoll');
 	});
 };
 
-AppFSM.prototype.state_fallback = function (on, once, timeout) {
-	var self = this;
+AppFSM.prototype.state_fallback = function (S) {
 	rs.setReapTime(FALLBACK_REAP_TIME);
 	rs.start();
-	on(pollTimeEmitter, 'timeout', function () {
+	S.on(pollTimeEmitter, 'timeout', function () {
 		ps.start();
 	});
-	on(cfl, 'error', function () {
+	S.on(cfl, 'error', function () {
 		/* Ignore any CF errors while in fallback mode. */
 	});
-	once(cfl, 'bootstrap', function () {
-		self.gotoState('cfFirstPoll');
+	S.on(cfl, 'bootstrap', function () {
+		S.gotoState('cfFirstPoll');
 	});
 };
 
