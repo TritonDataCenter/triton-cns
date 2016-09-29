@@ -46,7 +46,7 @@ var log = bunyan.createLogger({name: 'cns',
 var agent = new cueball.HttpAgent({
 	resolvers: [conf.binder_domain],
 	spares: 2,
-	maximum: 4,
+	maximum: 10,
 	recovery: {
 		default: {
 			timeout: 2000,
@@ -97,8 +97,8 @@ var cfOpts = {
 		subResources: conf.changefeed_opts.subResources
 	},
 	backoff: {
-		maxTimeout: Infinity,
-		minTimeout: 10,
+		maxTimeout: 10000,
+		minTimeout: 2000,
 		retries: Infinity
 	}
 };
