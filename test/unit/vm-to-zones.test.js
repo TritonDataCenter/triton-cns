@@ -41,13 +41,18 @@ test('basic single container', function (t) {
 	var zones = buildZonesFromVm(vm, config, log);
 	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
 
-	t.deepEqual(Object.keys(zones['foo']), ['abc123.inst.def432']);
+	t.deepEqual(Object.keys(zones['foo']), ['abc123.inst.def432',
+	    'abc123.cmon']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['abc123.inst.def432'];
 	t.deepEqual(fwd, [
 	    {constructor: 'A', args: ['1.2.3.4']},
 	    {constructor: 'TXT', args: ['abc123']}
+	]);
+	var cmon = zones['foo']['abc123.cmon'];
+	t.deepEqual(cmon, [
+	    {constructor: 'CNAME', args: ['cmon.foo']}
 	]);
 	var rev = zones['3.2.1.in-addr.arpa']['4'];
 	t.deepEqual(rev, [
@@ -81,10 +86,11 @@ test('cloudapi instance', function (t) {
 	    ]
 	};
 	var zones = buildZonesFromVm(vm, config, log);
-	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+	t.deepEqual(Object.keys(zones).sort(), ['3.2.1.in-addr.arpa', 'foo']);
 
-	t.deepEqual(Object.keys(zones['foo']), [
-	    'abc123.inst.def432', 'cloudapi.svc.def432', 'cloudapi']);
+	t.deepEqual(Object.keys(zones['foo']).sort(), [
+	    'abc123.cmon', 'abc123.inst.def432', 'cloudapi',
+	    'cloudapi.svc.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['cloudapi'];
@@ -125,10 +131,10 @@ test('with use_alias', function (t) {
 	    ]
 	};
 	var zones = buildZonesFromVm(vm, config, log);
-	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+	t.deepEqual(Object.keys(zones).sort(), ['3.2.1.in-addr.arpa', 'foo']);
 
-	t.deepEqual(Object.keys(zones['foo']),
-	    ['abc123.inst.def432', 'test.inst.def432']);
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['abc123.cmon', 'abc123.inst.def432', 'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['test.inst.def432'];
@@ -170,10 +176,10 @@ test('with use_login', function (t) {
 	    ]
 	};
 	var zones = buildZonesFromVm(vm, config, log);
-	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+	t.deepEqual(Object.keys(zones).sort(), ['3.2.1.in-addr.arpa', 'foo']);
 
-	t.deepEqual(Object.keys(zones['foo']),
-	    ['abc123.inst.def432', 'abc123.inst.bar']);
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['abc123.inst.bar'];
@@ -216,11 +222,11 @@ test('with use_alias and use_login', function (t) {
 	    ]
 	};
 	var zones = buildZonesFromVm(vm, config, log);
-	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
+	t.deepEqual(Object.keys(zones).sort(), ['3.2.1.in-addr.arpa', 'foo']);
 
-	t.deepEqual(Object.keys(zones['foo']),
-	    ['abc123.inst.def432', 'abc123.inst.bar', 'test.inst.def432',
-	     'test.inst.bar']);
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
+	    'test.inst.bar', 'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['test.inst.bar'];
@@ -310,8 +316,8 @@ test('multi-zone', function (t) {
 	    ['1.2.3.in-addr.arpa', '3.2.1.in-addr.arpa', 'bar', 'foo']);
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
-	    ['abc123.inst.bar', 'abc123.inst.def432', 'test.inst.bar',
-	    'test.inst.def432']);
+	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
+	    'test.inst.bar', 'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['bar']).sort(),
 	    Object.keys(zones['foo']).sort());
 
@@ -372,8 +378,8 @@ test('multi-zone, single PTRs', function (t) {
 	    ['1.2.3.in-addr.arpa', '3.2.1.in-addr.arpa', 'bar', 'baz', 'foo']);
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
-	    ['abc123.inst.bar', 'abc123.inst.def432', 'test.inst.bar',
-	    'test.inst.def432']);
+	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
+	    'test.inst.bar', 'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['bar']).sort(),
 	    Object.keys(zones['foo']).sort());
 
@@ -464,8 +470,9 @@ test('service with srvs', function (t) {
 	var zones = buildZonesFromVm(vm, config, log);
 	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
 
-	t.deepEqual(Object.keys(zones['foo']),
-	    ['abc123.inst.def432', 'test.inst.def432', 'svc1.svc.def432']);
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['abc123.cmon', 'abc123.inst.def432', 'svc1.svc.def432',
+	    'test.inst.def432']);
 
 	var fwd = zones['foo']['test.inst.def432'];
 	t.deepEqual(fwd, [

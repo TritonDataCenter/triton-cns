@@ -120,7 +120,7 @@ test('records in zones are correct', function (t) {
 	t.deepEquals(Object.keys(vmRecs).sort(),
 	    ['3.2.1.in-addr.arpa', 'foo']);
 	t.deepEquals(Object.keys(vmRecs['foo']).sort(),
-	    ['abc123.inst.def432']);
+	    ['abc123.cmon', 'abc123.inst.def432']);
 	t.deepEquals(Object.keys(vmRecs['3.2.1.in-addr.arpa']).sort(),
 	    ['4']);
 
@@ -229,9 +229,10 @@ test('incrementals are correct', function (t) {
 	rems = rems.map(function (r) {
 		return (JSON.parse(r));
 	});
-	t.strictEqual(rems.length, 2);
+	t.strictEqual(rems.length, 3);
 	t.strictEqual(rems[0].name, 'abc123.inst.def432');
 	t.strictEqual(rems[1].name, 'abc123.inst.def432');
+	t.strictEqual(rems[2].name, 'abc123.cmon');
 
 	t.end();
 });
@@ -768,7 +769,7 @@ test('records in zones are correct', function (t) {
 	t.deepEquals(Object.keys(vmRecs).sort(),
 	    ['3.2.1.in-addr.arpa', 'foo']);
 	t.deepEquals(Object.keys(vmRecs['foo']).sort(),
-	    ['abc123.inst.def432']);
+	    ['abc123.cmon', 'abc123.inst.def432']);
 	t.deepEquals(Object.keys(vmRecs['3.2.1.in-addr.arpa']).sort(),
 	    ['4']);
 
