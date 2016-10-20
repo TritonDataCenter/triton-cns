@@ -72,6 +72,7 @@ svcadm enable cns-updater
 # add log rotation entries for services
 sdc_log_rotation_add cns-updater /var/svc/log/*cns-updater*.log 1g
 sdc_log_rotation_add cns-server /var/svc/log/*cns-server*.log 1g
+sdc_log_rotation_setup_end
 
 # All done, run boilerplate end-of-setup
 sdc_setup_complete
