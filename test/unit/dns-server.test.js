@@ -178,6 +178,64 @@ test('serves instance A records', function (t) {
 	req.send();
 });
 
+test('returns NXDOMAIN response for nonexistent name', function (t) {
+	var q = dns.Question({
+		name: 'abc123aaaa.inst.def432.foo',
+		type: 'A'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.equal(answer.header.rcode,
+		    dns.consts.NAME_TO_RCODE['NOTFOUND']);
+		t.equal(answer.answer.length, 0);
+		t.equal(answer.authority.length, 1);
+		t.equal(answer.authority[0].type,
+		    dns.consts.NAME_TO_QTYPE['SOA']);
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
+test('returns NODATA response for no record type match', function (t) {
+	var q = dns.Question({
+		name: 'abc123.inst.def432.foo',
+		type: 'AAAA'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.equal(answer.header.rcode,
+		    dns.consts.NAME_TO_RCODE['NOERROR']);
+		t.equal(answer.answer.length, 0);
+		t.equal(answer.authority.length, 1);
+		t.equal(answer.authority[0].type,
+		    dns.consts.NAME_TO_QTYPE['SOA']);
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
 test('serves instance TXT records', function (t) {
 	var q = dns.Question({
 		name: 'abc123.inst.def432.foo',
