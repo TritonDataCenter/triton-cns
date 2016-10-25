@@ -61,6 +61,22 @@ test('create basic dataset', function (t) {
 			}
 		]
 	});
+	s.write({
+		uuid: 'def432',
+		services: [ { name: 'cmon', ports: [] } ],
+		listInstance: true,
+		listServices: true,
+		owner: {
+			uuid: 'aaaaa',
+			login: 'admin'
+		},
+		nics: [
+			{
+				ip: '8.7.6.5',
+				zones: ['foo']
+			}
+		]
+	});
 	s.once('finish', function () {
 		s.closeSerial(function () {
 			t.end();
@@ -254,6 +270,36 @@ test('serves instance TXT records', function (t) {
 		t.error(err);
 		t.equal(answer.answer.length, 1);
 		t.deepEqual(answer.answer[0].data, ['abc123']);
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
+test('serves cmon CNAME records', function (t) {
+	var q = dns.Question({
+		name: 'abc123.cmon.foo',
+		type: 'A'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.strictEqual(answer.answer.length, 2);
+		t.strictEqual(answer.answer[0].type,
+		    dns.consts.NAME_TO_QTYPE['CNAME']);
+		t.strictEqual(answer.answer[0].data, 'cmon.foo');
+		t.strictEqual(answer.answer[1].type,
+		    dns.consts.NAME_TO_QTYPE['A']);
+		t.strictEqual(answer.answer[1].address, '8.7.6.5');
 	});
 	req.once('end', function () {
 		t.end();
