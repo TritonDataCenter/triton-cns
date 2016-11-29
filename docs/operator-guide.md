@@ -49,7 +49,7 @@ invalid config that will put CNS services into "maintenance" (the SMF state
 where they are no longer eligible for restart until "cleared").
 
 Outside the core zone, there are components of your DNS infrastructure that
-can also participate in the CNS system. Any nameserver that can perform 
+can also participate in the CNS system. Any nameserver that can perform
 standard DNS zone transfers (AXFR/IXFR) can be a secondary nameserver for
 CNS and replicate all of its records, and this is the path to achieving
 availability and scalability with CNS.
@@ -107,14 +107,14 @@ development and testing, however.
 ### Internal-only corporate setup
 
 Existing infrastructure before CNS:
- - Pair of existing company recursive nameservers running ISC BIND, on 
+ - Pair of existing company recursive nameservers running ISC BIND, on
    10.1.1.10 and 10.1.1.11
  - All client machines configured to use these as their recursive nameservers
 
 CNS deployment:
  - CNS zone on headnode, with a NIC on `external` (10.1.2.5)
  - CNS has the existing recursive nameservers whitelisted as replication peers
- - Existing recursive nameservers configured to be authoritative for the CNS 
+ - Existing recursive nameservers configured to be authoritative for the CNS
    suffix and set to use 10.1.2.5 as the "master" for the zone
  - Client machines do not communicate with CNS directly at all -- the recursive
    nameservers are replicating the records from CNS and then answering queries
@@ -155,6 +155,79 @@ combination of the two works because each set of nameservers (the public
 Internet-facing set, and the internal recursive set) only replicate their
 particular zone from the CNS server.
 
+## DNS zones
+
+Another key factor you should consider before beginning your CNS deployment is
+the set of DNS zones you wish to use. A DNS zone is a sub-tree of the DNS
+hierarchy -- e.g. you could own the domain `example.com`, and use the zone
+`cns.example.com` for CNS -- so your actual CNS hostnames would appear as
+`foobar.cns.example.com`.
+
+Since containers and instances in Triton may have NICs on multiple networks (
+and therefore multiple IP addresses), it is often useful to distinguish between
+them. If you deployed CNS with a single DNS zone in use, in the default
+configuration, you would find that looking up a CNS name returns to you all of
+the IP addresses of a container mixed together as one list, regardless of
+whether some are "private" or "public" in your deployment. This may be
+undesirable if you expect users to connect only to some of these addresses
+(because, for example, some may not be accessible from the outside).
+
+CNS supports the use of multiple DNS zones to make this distinction clear. The
+most typical use is to have one DNS zone for "public" IP addresses, and one for
+"private" IP addresses. It is worth noting that these do *not* have to be
+actual private IP addresses in terms of RFC1918 (e.g. in the subnets
+`10.0.0.0/8`, `192.168.0.0/16` etc) -- this is about the semantic use of the
+network in your deployment.
+
+DNS zones handled by CNS can either be configured to list IP addresses only
+from a defined set of networks (or network pools), or can be configured as
+"catch-all" or "wildcard" zones, which list all remaining addresses. The most
+typical configurations are to list "only public IP addresses", and to list
+"public" and "private" addresses in two separate zones (often the "private"
+zone is made a catch-all zone so it can list Fabric networks).
+
+### Example: only public IP addresses in CNS
+
+Triton setup:
+ - One network, "external", with Internet public IP addresses in `192.0.2.0/24`
+ - Another network "internal", with addresses in `10.0.0.0/24`
+ - Fabric networking enabled, user has a private fabric
+
+CNS zone configuration:
+ - DNS zone: `cns.foo.com`, configured with `networks = [ "external" ]`
+   (explicit list)
+
+Example:
+ - A container named `test` is deployed by user `jim`, with NICs on
+   "external", "internal", and `jim`'s private fabric
+
+Results:
+ - `test.inst.jim.cns.foo.com` resolves only to the "external" address of the
+   `test` container. The "internal" and fabric addresses are not in DNS.
+
+### Example: split public/private zones
+
+Triton setup:
+ - One network, "external", with Internet public IP addresses in `192.0.2.0/24`
+ - Another network "internal", with addresses in `10.0.0.0/24`
+ - Fabric networking enabled, user has a private fabric
+
+CNS zone configuration:
+ - DNS zone: `ext.foobar.com`, configured with `networks = [ "external" ]`
+ - DNS zone: `int.foobar.com`, configured with `networks = [ "*" ]`
+   (a catch-all or wildcard zone)
+
+Example:
+ - A container named `test` is deployed by user `jill`, with NICs on
+   "external", "internal", and `jill`'s private fabric
+
+Results:
+ - `test.inst.jill.ext.foobar.com` resolves only to the "external" address of
+   the `test` container.
+ - `test.inst.jill.int.foobar.com` resolves to both the "internal" address and
+   the private fabric address of the `test` container (there will be two `A`
+   records served for this name)
+
 ## Tasks
 
 ### Setting up CNS for the first time
@@ -170,7 +243,7 @@ To create the CNS service and zone on your headnode:
 ...
 ```
 
-The first step sets up the CNS zone itself and the SAPI service for it. The 
+The first step sets up the CNS zone itself and the SAPI service for it. The
 second activates some SAPI metadata that is necessary for the CloudAPI
 integration to work.
 
@@ -252,6 +325,63 @@ hidden_primary:  false
 This is particularly useful if the information was truncated in the table
 summary display, as will often happen when network UUIDs are explicitly
 listed under `networks`, or more than one replication peer is used.
+
+### Configuring DNS zones
+
+From the CNS zone on the headnode, you can use the `cnsadm zones` command to
+manage DNS zones in the CNS configuration. This is the output of `cnsadm zones`
+with no arguments, for a typical default configuration:
+
+```
+[root@uuid (dc:cns0) ~]# cnsadm zones
+ZONE                     NETWORKS   PEERS                      HIDDEN PRIMARY
+dc.cns.joyent.us         *                                     false
+(ip-reverse-lookup)                                            false
+```
+
+Here we have a single DNS zone, `dc.cns.joyent.us`, configured as a catch-all
+or wildcard zone (indicated by `*` under `NETWORKS`).
+
+To change this to a "public IP addresses only" configuration, we would simply
+modify the network list on the zone:
+
+```
+[root@uuid (dc:cns0) ~]# cnsadm zones dc.cns.joyent.us networks=8c26b4f8-b67e-11e6-8ee4-ffb3a2f73c8d
+```
+
+(where `8c26b4f8-b67e-11e6-8ee4-ffb3a2f73c8d` is the UUID of the "external"
+network on this deployment -- you can obtain this UUID from the Networking tab
+in AdminUI, or by using the `sdc-napi` command)
+
+This would change the output of `cnsadm zones` to now look like:
+
+```
+[root@uuid (dc:cns0) ~]# cnsadm zones
+ZONE                     NETWORKS   PEERS                      HIDDEN PRIMARY
+dc.cns.joyent.us         (1 UUIDs)                             false
+(ip-reverse-lookup)                                            false
+```
+
+Now, if we wanted to change to a public-private split configuration, we would
+add a second zone as a new wildcard:
+
+```
+[root@uuid (dc:cns0) ~]# cnsadm zones -a dc-int.cns.joyent.us networks=*
+```
+
+And the new output of `cnsadm zones`:
+
+```
+[root@uuid (dc:cns0) ~]# cnsadm zones
+ZONE                     NETWORKS   PEERS                      HIDDEN PRIMARY
+dc.cns.joyent.us         (1 UUIDs)                             false
+dc-int.cns.joyent.us     *                                     false
+(ip-reverse-lookup)                                            false
+```
+
+The `man` reference page about the `cnsadm` command includes further examples
+of modifying, adding and removing DNS zones. Type `man cnsadm` while logged
+into the CNS zone for further details.
 
 ### Checking CNS status
 
