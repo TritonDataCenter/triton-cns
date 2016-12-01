@@ -8,12 +8,50 @@
 
 var assert = require('assert-plus');
 var minimatch = require('minimatch');
+var cueball = require('cueball');
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
 
 module.exports = MockRedis;
 
-function MockRedis() {
-	this.db = {};
+function MockRedis(db) {
+	this.db = db || {};
+	EventEmitter.call(this);
 }
+util.inherits(MockRedis, EventEmitter);
+MockRedis.createPool = function () {
+	var db = {};
+	var res = cueball.resolverForIpOrDomain({ input: '127.0.0.1:6379' });
+	var pool = new cueball.ConnectionPool({
+		domain: 'localhost',
+		resolver: res,
+		service: '_redis._tcp',
+		defaultPort: 6379,
+		spares: 4,
+		maximum: 100,
+		recovery: {
+			default: {
+				timeout: 100,
+				retries: 1,
+				delay: 0
+			}
+		},
+		constructor: function (backend) {
+			var c = new MockRedis(db);
+			setImmediate(function () {
+				c.emit('connect');
+			});
+			c.destroy = function () {
+				c.emit('end');
+			};
+			c.unref = function () {};
+			c.ref = function () {};
+			return (c);
+		}
+	});
+	res.start();
+	return (pool);
+};
 MockRedis.prototype.keys = function (filter, cb) {
 	var keys = Object.keys(this.db).filter(function (k) {
 		return (minimatch(k, filter));

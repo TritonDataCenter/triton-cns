@@ -18,7 +18,7 @@ var MockRedis = require('./mock-redis');
 var utils = require('../../lib/utils');
 
 var sandbox;
-var redis;
+var redisPool, redis;
 var server;
 var currentSerial = 1;
 
@@ -31,8 +31,12 @@ test('setup sandbox', function (t) {
 		return (currentSerial);
 	});
 	t.equal(utils.currentSerial(), 1);
-	redis = new MockRedis();
-	t.end();
+	redisPool = MockRedis.createPool();
+	redisPool.claim(function (err, handle, r) {
+		t.ifError(err);
+		redis = r;
+		t.end();
+	});
 });
 
 test('create basic dataset', function (t) {
@@ -87,7 +91,7 @@ test('create basic dataset', function (t) {
 
 test('create server', function (t) {
 	server = new DNSServer({
-		client: redis,
+		redisPool: redisPool,
 		port: 9953,
 		address: '127.0.0.1',
 		config: {

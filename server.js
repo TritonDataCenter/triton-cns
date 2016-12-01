@@ -13,6 +13,7 @@ var DNSServer = require('./lib/dns-server');
 var APIServer = require('./lib/api-server');
 var restify = require('restify');
 var path = require('path');
+var cueball = require('cueball');
 
 var confPath;
 if (process.argv[2])
@@ -20,8 +21,6 @@ if (process.argv[2])
 if (confPath === undefined)
 	confPath = path.join(__dirname, 'etc', 'config.json');
 var conf = config.parse(confPath);
-
-var client = redis.createClient(conf.redis_opts);
 
 var log = bunyan.createLogger({
 	name: 'cns',
@@ -32,15 +31,48 @@ var log = bunyan.createLogger({
 	}
 });
 
+var res = cueball.resolverForIpOrDomain({ input: '127.0.0.1:6379' });
+var redisPool = new cueball.ConnectionPool({
+	resolver: res,
+	domain: 'localhost',
+	service: '_redis._tcp',
+	defaultPort: 6379,
+	log: log,
+	spares: 4,
+	maximum: 100,
+	recovery: {
+		default: {
+			timeout: 1000,
+			delay: 500,
+			retries: 5
+		}
+	},
+	constructor: function (backend) {
+		var c = redis.createClient({
+			host: backend.address,
+			port: backend.port,
+			enable_offline_queue: false,
+			max_attempts: 1
+		});
+		c.destroy = function () {
+			c.end(false);
+		};
+		c.unref = function () {};
+		c.ref = function () {};
+		return (c);
+	}
+});
+res.start();
+
 var s = new DNSServer({
-	client: client,
+	redisPool: redisPool,
 	log: log,
 	config: conf,
 	port: 53
 });
 
 var api = new APIServer({
-	client: client,
+	redisPool: redisPool,
 	log: log,
 	config: conf,
 	port: 80,
