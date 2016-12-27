@@ -492,3 +492,47 @@ test('service with srvs', function (t) {
 
 	t.end();
 });
+
+test('cmon everywhere', function (t) {
+	var config = {
+	    forward_zones: {
+		'foo': {},
+		'bar': {}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    services: [],
+	    listInstance: true,
+	    listServices: false,
+	    owner: {
+		uuid: 'def432'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo']
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa', 'bar']);
+
+	t.deepEqual(Object.keys(zones['foo']), ['abc123.inst.def432',
+	    'abc123.cmon']);
+	t.deepEqual(Object.keys(zones['bar']), ['abc123.cmon']);
+	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
+
+	var cmon = zones['foo']['abc123.cmon'];
+	t.deepEqual(cmon, [
+	    {constructor: 'CNAME', args: ['cmon.foo']}
+	]);
+
+	cmon = zones['bar']['abc123.cmon'];
+	t.deepEqual(cmon, [
+	    {constructor: 'CNAME', args: ['cmon.bar']}
+	]);
+
+	t.end();
+});
