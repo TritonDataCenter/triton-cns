@@ -132,3 +132,14 @@ Possible values:
  - `"down"` (String)
  - `"up"` (String)
  - Any other string value (will be considered the same as `"up"`)
+
+### `triton.cns.acme-challenge`
+
+Can be set to publish data in a TXT record under `_acme-challenge.$name` for
+all DNS names for this instance.
+
+Used with the ACME certificate issuance protocol, to prove ownership of a
+particular domain.
+
+Possible values:
+ - Any URL-safe base64 string
