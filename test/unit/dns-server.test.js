@@ -311,6 +311,37 @@ test('serves cmon CNAME records', function (t) {
 	req.send();
 });
 
+test('is not case sensitive', function (t) {
+	var q = dns.Question({
+		name: 'AbC123.InSt.DeF432.fOo',
+		type: 'A'
+	});
+	var req = dns.Request({
+		question: q,
+		server: { address: '127.0.0.1', port: 9953, type: 'udp' },
+		timeout: 1000
+	});
+	req.once('timeout', function () {
+		t.fail('timeout');
+		t.end();
+	});
+	req.on('message', function (err, answer) {
+		t.error(err);
+		t.equal(answer.answer.length, 1);
+		t.equal(answer.answer[0].ttl, 30);
+		t.strictEqual(answer.answer[0].address, '1.2.3.4');
+		t.equal(answer.authority.length, 1);
+		t.equal(answer.authority[0].type,
+		    dns.consts.NAME_TO_QTYPE['NS']);
+		t.strictEqual(answer.authority[0].name, 'foo');
+		t.strictEqual(answer.authority[0].data, 'foobar');
+	});
+	req.once('end', function () {
+		t.end();
+	});
+	req.send();
+});
+
 test('generate some services', function (t) {
 	++currentSerial;
 
