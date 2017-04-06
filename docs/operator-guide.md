@@ -637,3 +637,75 @@ logs of the peer nameserver itself.
 As always, the `dig` command is very useful, particularly with its ability to
 request zone transfers (using `dig axfr zone.name @localhost`), which will show
 you the entire contents of a given server's version of a zone.
+
+### Rebuilding the CNS redis database
+
+Some past bugs in CNS have caused the Redis database to balloon out to a very
+large size (hundreds of MB). The Redis database dump (RDB file) should
+generally be on the order of 10MB in size: if the one in your CNS installation
+is much larger (e.g. >100MB), you may have been bitten by one of these bugs.
+
+If you have never run a CNS image older than May 2016 on your Triton standup,
+and you experience this issue, please report it as a bug! This procedure
+may still help you, but the bug needs to be fixed too.
+
+You can check the size of the Redis RDB dump like so:
+
+```
+[root@uuid (dc:cns0) ~]# du -hs /data/redis/dump.rdb
+3.9M    /data/redis/dump.rdb
+```
+
+Thankfully, since CNS is not an authoritative source of any of the data it
+serves, it is always possible to simply throw out the Redis database and
+re-create from scratch (as if this is the very first time you were running
+CNS).
+
+To do this, first stop all the CNS services:
+
+```
+[root@uuid (dc:cns0) ~]# svcadm disable cns-server
+[root@uuid (dc:cns0) ~]# svcadm disable cns-updater
+[root@uuid (dc:cns0) ~]# svcadm disable cns-redis
+```
+
+Wait until the Redis server has entirely shut down:
+
+```
+[root@uuid (dc:cns0) ~]# svcs -p cns-redis
+STATE          STIME    FMRI
+online*        22:17:39 svc:/triton/application/cns-redis:default
+               22:17:39    89123 redis-server
+[root@uuid (dc:cns0) ~]# svcs -p cns-redis
+STATE          STIME    FMRI
+offline        22:17:39 svc:/triton/application/cns-redis:default
+```
+
+Now simply delete the `dump.rdb` file and start `cns-redis` and `cns-updater`
+back up again:
+
+```
+[root@uuid (dc:cns0) ~]# rm -f /data/redis/dump.rdb
+[root@uuid (dc:cns0) ~]# svcadm enable cns-redis
+[root@uuid (dc:cns0) ~]# svcadm enable cns-updater
+```
+
+While it is safe to start the `cns-server` back up at this point, too, it's not
+going to serve anything useful until the `cns-updater` has done its first
+update. We can watch the logs of the `cns-updater` to see when this happens:
+
+```
+[root@uuid (dc:cns0) ~]# tail -f $(svcs -L cns-updater) | bunyan -o short
+...
+22:48:36.527Z  INFO cns: Poll done, committing...
+22:48:36.560Z DEBUG cns: app state changed to cfRunning
+22:48:36.603Z DEBUG cns: pushed 2938 candidates for reaping (stage=ReaperStream)
+...
+22:48:38.677Z DEBUG cns: reaping complete (stage=ReaperStream)
+```
+
+Now we enable the `cns-server` and things should return to normal:
+
+```
+[root@uuid (dc:cns0) ~]# svcadm enable cns-server
+```
