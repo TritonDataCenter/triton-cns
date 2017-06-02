@@ -14,6 +14,7 @@ var APIServer = require('./lib/api-server');
 var restify = require('restify');
 var path = require('path');
 var cueball = require('cueball');
+var EventEmitter = require('events').EventEmitter;
 
 var confPath;
 if (process.argv[2])
@@ -56,6 +57,20 @@ var redisPool = new cueball.ConnectionPool({
 		});
 		c.destroy = function () {
 			c.end(false);
+		};
+		c.emit = function () {
+			var args = arguments;
+			/*
+			 * The redis client emits 'ready' when it's actually
+			 * ready for use. It also emits 'connect', before
+			 * it's ready but after the TCP socket connects. We
+			 * don't care about that, so drop it.
+			 */
+			if (args[0] === 'connect')
+				return (this);
+			if (args[0] === 'ready')
+				args[0] = 'connect';
+			return (EventEmitter.prototype.emit.apply(this, args));
 		};
 		c.unref = function () {};
 		c.ref = function () {};
