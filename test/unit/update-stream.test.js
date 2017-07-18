@@ -60,7 +60,7 @@ test('writes records for one container', function (t) {
 		client: client,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -72,13 +72,18 @@ test('writes records for one container', function (t) {
 		listInstance: true,
 		listServices: true,
 		reasons: [],
+		owner_uuid: 'def432',
 		owner: {
 			uuid: 'def432'
 		},
 		nics: [
 			{
 				ip: '1.2.3.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: {
+					name: 'foo',
+					owner_uuids: ['def432']
+				}
 			}
 		]
 	});
@@ -139,7 +144,7 @@ test('deletes records for one container', function (t) {
 		client: client,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -151,13 +156,18 @@ test('deletes records for one container', function (t) {
 		listInstance: true,
 		listServices: true,
 		reasons: [],
+		owner_uuid: 'def432',
 		owner: {
 			uuid: 'def432'
 		},
 		nics: [
 			{
 				ip: '1.2.3.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: {
+					name: 'foo',
+					owner_uuids: ['def432']
+				}
 			}
 		]
 	}, undefined, function () {
@@ -175,7 +185,11 @@ test('deletes records for one container', function (t) {
 				nics: [
 					{
 						ip: '1.2.3.4',
-						zones: ['foo']
+						zones: ['foo'],
+						network: {
+							name: 'foo',
+							owner_uuids: ['def432']
+						}
 					}
 				]
 			});
@@ -243,7 +257,7 @@ test('updates records upon a change of IP', function (t) {
 		client: client,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -255,13 +269,18 @@ test('updates records upon a change of IP', function (t) {
 		services: [],
 		listInstance: true,
 		listServices: true,
+		owner_uuid: 'def432',
 		owner: {
 			uuid: 'def432'
 		},
 		nics: [
 			{
 				ip: '1.2.3.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: {
+					name: 'foo',
+					owner_uuids: ['def432']
+				}
 			}
 		]
 	}, undefined, function () {
@@ -272,13 +291,18 @@ test('updates records upon a change of IP', function (t) {
 				services: [],
 				listInstance: true,
 				listServices: true,
+				owner_uuid: 'def432',
 				owner: {
 					uuid: 'def432'
 				},
 				nics: [
 					{
 						ip: '1.2.3.5',
-						zones: ['foo']
+						zones: ['foo'],
+						network: {
+							name: 'foo',
+							owner_uuids: ['def432']
+						}
 					}
 				]
 			});
@@ -370,7 +394,7 @@ test('writes records for a service', function (t) {
 		client: client,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -388,7 +412,8 @@ test('writes records for a service', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo' }
 			}
 		]
 	});
@@ -403,7 +428,8 @@ test('writes records for a service', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.6',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo' }
 			}
 		]
 	});
@@ -455,7 +481,7 @@ test('service with zones with multiple nics', function (t) {
 		client: client,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['*'] }
 			},
 			reverse_zones: {}
 		}
@@ -472,11 +498,13 @@ test('service with zones with multiple nics', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo', owner_uuids: [] }
 			},
 			{
 				ip: '2.3.1.2',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'bar', owner_uuids: [] }
 			}
 		]
 	});
@@ -491,11 +519,13 @@ test('service with zones with multiple nics', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.6',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo', owner_uuids: [] }
 			},
 			{
 				ip: '2.3.1.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'bar', owner_uuids: [] }
 			}
 		]
 	});
@@ -546,7 +576,7 @@ test('container with ipv6 addresses', function (t) {
 		client: client,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -563,7 +593,8 @@ test('container with ipv6 addresses', function (t) {
 		nics: [
 			{
 				ips: ['1.2.3.4', 'abcd:f00::1'],
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo', owner_uuids: [] }
 			}
 		]
 	});
@@ -625,7 +656,7 @@ test('add, delete-add race against commit', function (t) {
 		log: log,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -646,7 +677,11 @@ test('add, delete-add race against commit', function (t) {
 					nics: [
 						{
 							ip: '1.2.3.4',
-							zones: ['foo']
+							zones: ['foo'],
+							network: {
+								name: 'foo',
+								owner_uuids: []
+							}
 						}
 					]
 				}, undefined, cb);
@@ -663,7 +698,11 @@ test('add, delete-add race against commit', function (t) {
 					nics: [
 						{
 							ip: '1.2.3.4',
-							zones: ['foo']
+							zones: ['foo'],
+							network: {
+								name: 'foo',
+								owner_uuids: []
+							}
 						}
 					]
 				}, undefined, cb);
@@ -692,7 +731,11 @@ test('add, delete-add race against commit', function (t) {
 					nics: [
 						{
 							ip: '1.2.3.4',
-							zones: ['foo']
+							zones: ['foo'],
+							network: {
+								name: 'foo',
+								owner_uuids: []
+							}
 						}
 					]
 				}, undefined, cb);
@@ -710,7 +753,11 @@ test('add, delete-add race against commit', function (t) {
 					nics: [
 						{
 							ip: '1.2.3.4',
-							zones: ['foo']
+							zones: ['foo'],
+							network: {
+								name: 'foo',
+								owner_uuids: []
+							}
 						}
 					]
 				}, undefined, function () {

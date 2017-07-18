@@ -19,6 +19,7 @@ var UfdsFilter = require('./lib/ufds-filter');
 var NetPoolFilter = require('./lib/net-pool-filter');
 var NetFilter = require('./lib/net-filter');
 var NAPILegacyFilter = require('./lib/napi-legacy-filter');
+var NetworkInfoFilter = require('./lib/network-info-filter');
 var PollerStream = require('./lib/poller-stream');
 var ReaperStream = require('./lib/reaper-stream');
 var createUfdsPool = require('./lib/ufds-pool');
@@ -72,6 +73,7 @@ var cff = new ChangefeedFilter(opts);
 var uf = new UfdsFilter(opts);
 var nlf = new NAPILegacyFilter(opts);
 var npf = new NetPoolFilter(opts);
+var nif = new NetworkInfoFilter(opts);
 var nf = new NetFilter(opts);
 var ffs = new FlagFilter(opts);
 var us = new UpdateStream(opts);
@@ -121,7 +123,8 @@ AppFSM.prototype.state_initial = function (S) {
 	uf.pipe(nlf);
 	nlf.pipe(npf);
 	npf.pipe(nf);
-	nf.pipe(ffs);
+	nf.pipe(nif);
+	nif.pipe(ffs);
 	ffs.pipe(us);
 	rs.pipe(cnf);
 
