@@ -19,7 +19,7 @@ var log = bunyan.createLogger({name: 'cns'});
 test('basic single container', function (t) {
 	var config = {
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -34,7 +34,8 @@ test('basic single container', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -42,7 +43,7 @@ test('basic single container', function (t) {
 	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
 
 	t.deepEqual(Object.keys(zones['foo']), ['abc123.inst.def432',
-	    'abc123.cmon']);
+	    'default-fabric.abc123.inst.def432', 'abc123.cmon']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['abc123.inst.def432'];
@@ -65,7 +66,7 @@ test('basic single container', function (t) {
 test('cloudapi instance', function (t) {
 	var config = {
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -81,7 +82,8 @@ test('cloudapi instance', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -90,7 +92,8 @@ test('cloudapi instance', function (t) {
 
 	t.deepEqual(Object.keys(zones['foo']).sort(), [
 	    'abc123.cmon', 'abc123.inst.def432', 'cloudapi',
-	    'cloudapi.svc.def432']);
+	    'cloudapi.svc.def432', 'default-fabric.abc123.inst.def432',
+	    'default-fabric.cloudapi.svc.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['cloudapi'];
@@ -110,7 +113,7 @@ test('with use_alias', function (t) {
 	var config = {
 	    use_alias: true,
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -126,7 +129,11 @@ test('with use_alias', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: {
+			name: 'SDC-Customer-Public-Pool-72.2.118.0/23',
+			owner_uuids: ['def432']
+		    }
 		}
 	    ]
 	};
@@ -134,7 +141,10 @@ test('with use_alias', function (t) {
 	t.deepEqual(Object.keys(zones).sort(), ['3.2.1.in-addr.arpa', 'foo']);
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
-	    ['abc123.cmon', 'abc123.inst.def432', 'test.inst.def432']);
+	    ['abc123.cmon', 'abc123.inst.def432',
+	    'sdc-customer-public-pool-72-2-118-0-23.abc123.inst.def432',
+	    'sdc-customer-public-pool-72-2-118-0-23.test.inst.def432',
+	    'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['test.inst.def432'];
@@ -154,7 +164,7 @@ test('with use_login', function (t) {
 	var config = {
 	    use_login: true,
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -171,7 +181,8 @@ test('with use_login', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['abc123'] }
 		}
 	    ]
 	};
@@ -200,7 +211,7 @@ test('with use_alias and use_login', function (t) {
 	    use_alias: true,
 	    use_login: true,
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -217,7 +228,8 @@ test('with use_alias and use_login', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -226,7 +238,11 @@ test('with use_alias and use_login', function (t) {
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
 	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
-	    'test.inst.bar', 'test.inst.def432']);
+	    'default-fabric.abc123.inst.bar',
+	    'default-fabric.abc123.inst.def432',
+	    'default-fabric.test.inst.bar',
+	    'default-fabric.test.inst.def432', 'test.inst.bar',
+	    'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 
 	var fwd = zones['foo']['test.inst.bar'];
@@ -247,7 +263,7 @@ test('using a PTR name', function (t) {
 	    use_alias: true,
 	    use_login: true,
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -265,7 +281,8 @@ test('using a PTR name', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -285,8 +302,8 @@ test('multi-zone', function (t) {
 	    use_alias: true,
 	    use_login: true,
 	    forward_zones: {
-		'foo': {},
-		'bar': {}
+		'foo': { networks: ['*'] },
+		'bar': { networks: ['aaaaaa'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -303,11 +320,13 @@ test('multi-zone', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		},
 		{
 		    ip: '3.2.1.4',
-		    zones: ['bar']
+		    zones: ['bar'],
+		    network: { name: 'external', owner_uuids: [] }
 		}
 	    ]
 	};
@@ -317,9 +336,13 @@ test('multi-zone', function (t) {
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
 	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
-	    'test.inst.bar', 'test.inst.def432']);
+	    'default-fabric.abc123.inst.bar',
+	    'default-fabric.abc123.inst.def432', 'default-fabric.test.inst.bar',
+	    'default-fabric.test.inst.def432', 'test.inst.bar',
+	    'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['bar']).sort(),
-	    Object.keys(zones['foo']).sort());
+	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
+	    'test.inst.bar', 'test.inst.def432']);
 
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 	t.deepEqual(Object.keys(zones['1.2.3.in-addr.arpa']), ['4']);
@@ -346,9 +369,9 @@ test('multi-zone, single PTRs', function (t) {
 	    use_alias: true,
 	    use_login: true,
 	    forward_zones: {
-		'foo': {},
-		'bar': {},
-		'baz': {}
+		'foo': { networks: ['*'] },
+		'bar': { networks: ['bbbbb'] },
+		'baz': { networks: ['aaaaa'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -365,11 +388,13 @@ test('multi-zone, single PTRs', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo', 'bar']
+		    zones: ['foo', 'bar'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		},
 		{
 		    ip: '3.2.1.4',
-		    zones: ['baz']
+		    zones: ['baz'],
+		    network: { name: 'external', owner_uuids: [] }
 		}
 	    ]
 	};
@@ -379,9 +404,13 @@ test('multi-zone, single PTRs', function (t) {
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
 	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
-	    'test.inst.bar', 'test.inst.def432']);
+	    'default-fabric.abc123.inst.bar',
+	    'default-fabric.abc123.inst.def432', 'default-fabric.test.inst.bar',
+	    'default-fabric.test.inst.def432', 'test.inst.bar',
+	    'test.inst.def432']);
 	t.deepEqual(Object.keys(zones['bar']).sort(),
-	    Object.keys(zones['foo']).sort());
+	    ['abc123.cmon', 'abc123.inst.bar', 'abc123.inst.def432',
+	    'test.inst.bar', 'test.inst.def432']);
 
 	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
 	t.deepEqual(Object.keys(zones['1.2.3.in-addr.arpa']), ['4']);
@@ -408,9 +437,9 @@ test('multi-zone, shortest zone priority PTR', function (t) {
 	    use_alias: true,
 	    use_login: true,
 	    forward_zones: {
-		'foobarbaz': {},
-		'foobar': {},
-		'baz': {}
+		'foobarbaz': { networks: ['*'] },
+		'foobar': { networks: ['aaaaaa'] },
+		'baz': { networks: ['bbbbbb'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -427,7 +456,8 @@ test('multi-zone, shortest zone priority PTR', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foobar', 'foobarbaz', 'baz']
+		    zones: ['foobar', 'foobarbaz', 'baz'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -445,7 +475,7 @@ test('service with srvs', function (t) {
 	var config = {
 	    use_alias: true,
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['*'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -463,7 +493,8 @@ test('service with srvs', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -471,7 +502,10 @@ test('service with srvs', function (t) {
 	t.deepEqual(Object.keys(zones), ['foo', '3.2.1.in-addr.arpa']);
 
 	t.deepEqual(Object.keys(zones['foo']).sort(),
-	    ['abc123.cmon', 'abc123.inst.def432', 'svc1.svc.def432',
+	    ['abc123.cmon', 'abc123.inst.def432',
+	    'default-fabric.abc123.inst.def432',
+	    'default-fabric.svc1.svc.def432',
+	    'default-fabric.test.inst.def432', 'svc1.svc.def432',
 	    'test.inst.def432']);
 
 	var fwd = zones['foo']['test.inst.def432'];
@@ -497,7 +531,7 @@ test('acme challenge support', function (t) {
 	var config = {
 	    use_alias: true,
 	    forward_zones: {
-		'foo': {}
+		'foo': { networks: ['aaaaa'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -519,7 +553,8 @@ test('acme challenge support', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};
@@ -557,8 +592,8 @@ test('acme challenge support', function (t) {
 test('cmon everywhere', function (t) {
 	var config = {
 	    forward_zones: {
-		'foo': {},
-		'bar': {}
+		'foo': { networks: ['bbbbbb'] },
+		'bar': { networks: ['aaaaaa'] }
 	    },
 	    reverse_zones: {}
 	};
@@ -573,7 +608,8 @@ test('cmon everywhere', function (t) {
 	    nics: [
 		{
 		    ip: '1.2.3.4',
-		    zones: ['foo']
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
 		}
 	    ]
 	};

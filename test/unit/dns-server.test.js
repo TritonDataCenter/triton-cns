@@ -44,7 +44,7 @@ test('create basic dataset', function (t) {
 		client: redis,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -61,7 +61,8 @@ test('create basic dataset', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.4',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo' }
 			}
 		]
 	});
@@ -77,7 +78,8 @@ test('create basic dataset', function (t) {
 		nics: [
 			{
 				ip: '8.7.6.5',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'bar' }
 			}
 		]
 	});
@@ -349,7 +351,7 @@ test('generate some services', function (t) {
 		client: redis,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -366,7 +368,8 @@ test('generate some services', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.5',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo' }
 			}
 		]
 	});
@@ -381,7 +384,8 @@ test('generate some services', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.6',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'bar' }
 			}
 		]
 	});
@@ -493,7 +497,7 @@ test('services with ports (SRV)', function (t) {
 		client: redis,
 		config: {
 			forward_zones: {
-				'foo': {}
+				'foo': { networks: ['aaaaaa'] }
 			},
 			reverse_zones: {}
 		}
@@ -510,7 +514,8 @@ test('services with ports (SRV)', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.5',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'foo' }
 			}
 		]
 	});
@@ -525,7 +530,8 @@ test('services with ports (SRV)', function (t) {
 		nics: [
 			{
 				ip: '1.2.3.6',
-				zones: ['foo']
+				zones: ['foo'],
+				network: { name: 'bar' }
 			}
 		]
 	});
