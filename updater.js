@@ -140,6 +140,8 @@ AppFSM.prototype.state_initial = function (S) {
 AppFSM.prototype.state_cfFirstPoll = function (S) {
 	us.openSerial(false);
 	ps.start();
+	cfl.unpipe();
+	cff.unpipe();
 	S.on(ps, 'pollFinish', function () {
 		log.info('Poll done, committing...');
 		us.closeSerial();
@@ -184,6 +186,8 @@ AppFSM.prototype.state_fallbackFirstPoll = function (S) {
 AppFSM.prototype.state_fallback = function (S) {
 	rs.setReapTime(FALLBACK_REAP_TIME);
 	rs.start();
+	cfl.unpipe();
+	cff.unpipe();
 	S.on(pollTimeEmitter, 'timeout', function () {
 		ps.start();
 	});
