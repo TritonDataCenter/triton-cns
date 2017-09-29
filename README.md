@@ -5,7 +5,7 @@
 -->
 
 <!--
-    Copyright (c) 2016, Joyent, Inc.
+    Copyright (c) 2017, Joyent, Inc.
 -->
 
 # triton-cns
@@ -17,3 +17,20 @@ guidelines](https://github.com/joyent/triton/blob/master/CONTRIBUTING.md) --
 
 The Triton CNS (Container Naming Service) generates and serves DNS records
 based on the VMs and metadata configured in Triton.
+
+# Installation
+
+Installation, configuration and control of CNS:
+
+* [Operator Guide](docs/operator-guide.md)
+* [Metadata Controls](docs/metadata.md)
+
+# API
+
+See the [REST API](docs/index.md) for communicating with CNS.
+
+# Usage in Triton
+
+This blog post details how to use CNS to connect containers within a Triton DC:
+
+https://docs.joyent.com/public-cloud/network/cns/usage
