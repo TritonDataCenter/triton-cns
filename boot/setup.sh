@@ -7,7 +7,7 @@
 #
 
 #
-# Copyright (c) 2014, Joyent, Inc.
+# Copyright (c) 2018, Joyent, Inc.
 #
 
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -41,11 +41,6 @@ mkdir -p $DATA_ROOT/redis
 chmod 777 $DATA_ROOT/redis
 
 function sdc_setup_redis {
-    sdc_log_rotation_add amon-agent /var/svc/log/*amon-agent*.log 1g
-    sdc_log_rotation_add config-agent /var/svc/log/*config-agent*.log 1g
-    sdc_log_rotation_add redis /var/log/redis/*redis*.log 1g
-    sdc_log_rotation_setup_end
-
     svccfg import $SVC_ROOT/smf/manifests/cns-redis.xml
     svcadm enable redis
 }
@@ -70,6 +65,9 @@ svcadm enable cns-server
 svcadm enable cns-updater
 
 # add log rotation entries for services
+sdc_log_rotation_add amon-agent /var/svc/log/*amon-agent*.log 1g
+sdc_log_rotation_add config-agent /var/svc/log/*config-agent*.log 1g
+sdc_log_rotation_add redis /var/log/redis/*redis*.log 1g
 sdc_log_rotation_add cns-updater /var/svc/log/*cns-updater*.log 1g
 sdc_log_rotation_add cns-server /var/svc/log/*cns-server*.log 1g
 sdc_log_rotation_setup_end
