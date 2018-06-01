@@ -40,11 +40,6 @@ chmod 777 $DATA_ROOT
 mkdir -p $DATA_ROOT/redis
 chmod 777 $DATA_ROOT/redis
 
-function sdc_setup_redis {
-    svccfg import $SVC_ROOT/smf/manifests/cns-redis.xml
-    svcadm enable redis
-}
-
 CONFIG_AGENT_LOCAL_MANIFESTS_DIRS=$SVC_ROOT
 
 # Include common utility functions (then run the boilerplate)
@@ -56,13 +51,11 @@ useradd -d /opt/triton/cns -P 'Metadata Reader' cns || \
     fatal "failed to create user"
 
 echo "Installing cns redis"
-sdc_setup_redis
+svccfg import $SVC_ROOT/smf/manifests/cns-redis.xml
 
 # set up services
 svccfg import $SVC_ROOT/smf/manifests/cns-server.xml
 svccfg import $SVC_ROOT/smf/manifests/cns-updater.xml
-svcadm enable cns-server
-svcadm enable cns-updater
 
 # add log rotation entries for services
 sdc_log_rotation_add amon-agent /var/svc/log/*amon-agent*.log 1g
