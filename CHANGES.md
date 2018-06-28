@@ -5,11 +5,15 @@
 -->
 
 <!--
-    Copyright (c) 2015, Joyent, Inc.
+    Copyright (c) 2018, Joyent, Inc.
 -->
 
 # triton-cns
 
-## 1.0.0 (not yet released)
+## 0.1.1
+
+- TRITON-519 fix cns service crash when vm does not have an owner_uuid
+
+## 0.1.0
 
 - Lots of things
