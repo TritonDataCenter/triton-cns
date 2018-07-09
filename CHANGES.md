@@ -10,6 +10,10 @@
 
 # triton-cns
 
+## 0.1.2
+
+- TRITON-578 CNS should not continue as though it succeeded in the case of getNapiPools failure
+
 ## 0.1.1
 
 - TRITON-519 fix cns service crash when vm does not have an owner_uuid
