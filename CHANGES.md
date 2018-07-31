@@ -10,6 +10,10 @@
 
 # triton-cns
 
+## 0.1.3
+
+- TRITON-630 cns and cmon content-md5 header incompatible with vmapi for non-ascii characters
+
 ## 0.1.2
 
 - TRITON-578 CNS should not continue as though it succeeded in the case of getNapiPools failure

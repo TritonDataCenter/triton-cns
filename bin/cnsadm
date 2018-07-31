@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 var dashdash = require('dashdash');
@@ -108,9 +108,9 @@ if (Buffer.isBuffer(sapiUrl))
 	sapiUrl = sapiUrl.toString('ascii');
 sapiUrl = sapiUrl.trim();
 
-var sapi = restify.createJsonClient({
+var sapi = restify.createJsonClient(utils.getRestifyClientOptions({
 	url: sapiUrl
-});
+}));
 
 var SCHEMA = JSON.parse(
     fs.readFileSync('/opt/triton/cns/lib/config-schema.json').
@@ -158,9 +158,9 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 		process.exit(2);
 	}
 
-	apiClient = restify.createJsonClient({
+	apiClient = restify.createJsonClient(utils.getRestifyClientOptions({
 		url: 'http://127.0.0.1'
-	});
+	}));
 
 	sapi.get('/services?name=cns', function (err2, req2, res2, objs) {
 		if (err2) {
