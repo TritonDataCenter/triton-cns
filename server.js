@@ -40,10 +40,10 @@ var redisPool = new cueball.ConnectionPool({
 	defaultPort: 6379,
 	log: log,
 	spares: 4,
-	maximum: 100,
+	maximum: 12,
 	recovery: {
 		default: {
-			timeout: 1000,
+			timeout: 2000,
 			delay: 500,
 			retries: 5
 		}
