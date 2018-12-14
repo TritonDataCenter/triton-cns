@@ -48,7 +48,9 @@
 	"min_notify_interval": {{{min_notify_interval}}},
 {{/min_notify_interval}}
 
-	"redis_opts": {},
+	"redis_opts": {
+		"dropBufferSupport": true
+	},
 
 	"binder_domain": "binder.{{{datacenter_name}}}.{{{dns_domain}}}",
 
