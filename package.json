@@ -23,26 +23,25 @@
     "tape": "^4.2.1"
   },
   "dependencies": {
-    "assert-plus": "0.1.5",
-    "bunyan": "1.5.1",
-    "changefeed": "1.2.0",
-    "cueball": "2.2.6",
+    "assert-plus": "1.0.0",
+    "bunyan": "1.8.12",
+    "changefeed": "1.4.0",
+    "cueball": "2.9.0",
     "dashdash": "1.10.1",
-    "deep-equal": "1.0.1",
     "ipaddr.js": "1.0.3",
-    "jsprim": "1.2.2",
-    "ldapjs": "1.0.0",
+    "jsprim": "2.0.0",
+    "ldapjs": "1.0.2",
     "lru-cache": "4.1.5",
-    "mooremachine": "2.1.0",
-    "mname": "1.3.5",
-    "redis": "2.1.0",
+    "mooremachine": "2.2.1",
+    "mname": "1.5.0",
+    "ioredis": "3.2.2",
     "restify": "4.3.0",
     "restify-clients": "1.6.0",
     "restify-errors": "4.3.0",
     "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git#deefaef587ed3bee2706cb6e53ee3468e682932e",
     "sprintf-js": "1.0.3",
     "triton-tags": "1.2.2",
-    "uuid": "2.0.1",
-    "vasync": "1.6.3"
+    "uuid": "3.3.2",
+    "vasync": "2.2.0"
   }
 }

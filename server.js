@@ -6,7 +6,7 @@
  * Copyright (c) 2015, Joyent, Inc.
  */
 
-var redis = require('redis');
+var redis = require('ioredis');
 var bunyan = require('bunyan');
 var config = require('./lib/config');
 var DNSServer = require('./lib/dns-server');
@@ -52,8 +52,9 @@ var redisPool = new cueball.ConnectionPool({
 		var c = redis.createClient({
 			host: backend.address,
 			port: backend.port,
-			enable_offline_queue: false,
-			max_attempts: 1
+			enableOfflineQueue: false,
+			connectTimeout: 30000,
+			dropBufferSupport: true
 		});
 		c.destroy = function () {
 			c.end(false);
