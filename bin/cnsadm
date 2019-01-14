@@ -143,7 +143,7 @@ sapi.get('/configs/' + zoneName, function (err, req, res, obj) {
 
 	Object.keys(config).forEach(function (k) {
 		if (obj.metadata.hasOwnProperty(k)) {
-			if (!jsprim.deepEquals(config[k], obj.metadata[k]))
+			if (!jsprim.deepEqual(config[k], obj.metadata[k]))
 				waiting[k] = true;
 			config[k] = obj.metadata[k];
 		}
