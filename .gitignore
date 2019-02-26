@@ -1,7 +1,10 @@
+/make_stamps
 node_modules
+/bits
 build
 smf/manifests/*.xml
 etc/config.json
 coverage
 docs/*.html
 docs/*.json
+/cns-pkg-*.tar.gz

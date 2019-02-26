@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, Joyent, Inc. All rights reserved.
+# Copyright (c) 2019, Joyent, Inc. All rights reserved.
 #
 # Makefile: basic Makefile for template API service
 #
@@ -48,17 +48,32 @@ MAN_ROOT        := man/src
 
 DOC_FILES	 = index.md metadata.md operator-guide.md
 
-include ./tools/mk/Makefile.defs
-ifeq ($(shell uname -s),SunOS)
-        include ./tools/mk/Makefile.node_prebuilt.defs
-else
-        include ./tools/mk/Makefile.node.defs
-endif
-include ./tools/mk/Makefile.node_deps.defs
-include ./tools/mk/Makefile.smf.defs
+#
+# Stuff needed for buildimage
+#
+BASE_IMAGE_UUID  = 18b094b0-eb01-11e5-80c1-175dac7ddf02
+BUILDIMAGE_NAME = $(NAME)
+BUILDIMAGE_PKG	= $(TOP)/$(RELEASE_TARBALL)
+BUILDIMAGE_PKGSRC = redis-3.0.5
+BUILDIMAGE_DESC = Triton Container Naming Service
 
-RELEASE_TARBALL	:= $(NAME)-pkg-$(STAMP).tar.bz2
-RELSTAGEDIR     := /tmp/$(STAMP)
+AGENTS = amon config registrar
+
+ENGBLD_USE_BUILDIMAGE	= true
+ENGBLD_REQUIRE		:= $(shell git submodule update --init deps/eng)
+include ./deps/eng/tools/mk/Makefile.defs
+TOP ?= $(error Unable to access eng.git submodule Makefiles.)
+
+ifeq ($(shell uname -s),SunOS)
+        include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
+	include ./deps/eng/tools/mk/Makefile.agent_prebuilt.defs
+else
+        include ./deps/eng/tools/mk/Makefile.node.defs
+endif
+include ./deps/eng/tools/mk/Makefile.smf.defs
+
+RELEASE_TARBALL	:= $(NAME)-pkg-$(STAMP).tar.gz
+RELSTAGEDIR     := /tmp/$(NAME)-$(STAMP)
 
 #
 # Repo-specific targets
@@ -111,17 +126,12 @@ release: all docs $(SMF_MANIFESTS) $(NODE_EXEC)
 	cp $(TOP)/bin/cmd-wrapper $(RELSTAGEDIR)/root/opt/local/bin/cnsadm
 	cp -r $(TOP)/man $(RELSTAGEDIR)/root/opt/local/
 	cp -R $(TOP)/boot/* $(RELSTAGEDIR)/root/opt/smartdc/boot/
-	(cd $(RELSTAGEDIR) && $(TAR) -jcf $(TOP)/$(RELEASE_TARBALL) root site)
-	@rm -rf $(RELSTAGEDIR)
+	(cd $(RELSTAGEDIR) && $(TAR) -I pigz -cf $(TOP)/$(RELEASE_TARBALL) root site)
 
 .PHONY: publish
 publish: release
-	@if [[ -z "$(BITS_DIR)" ]]; then \
-		echo "error: 'BITS_DIR' must be set for 'publish' target"; \
-		exit 1; \
-	fi
-	mkdir -p $(BITS_DIR)/cns
-	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/cns/$(RELEASE_TARBALL)
+	mkdir -p $(ENGBLD_BITS_DIR)/cns
+	cp $(TOP)/$(RELEASE_TARBALL) $(ENGBLD_BITS_DIR)/cns/$(RELEASE_TARBALL)
 
 $(MAN_OUTDIR):
 	mkdir -p $@
@@ -132,12 +142,12 @@ $(MAN_OUTDIR)/%.1: $(MAN_ROOT)/%.md | $(MAN_OUTDIR)
 .PHONY: manpages
 manpages: $(MAN_OUTPAGES)
 
-include ./tools/mk/Makefile.deps
+include ./deps/eng/tools/mk/Makefile.deps
 ifeq ($(shell uname -s),SunOS)
-        include ./tools/mk/Makefile.node_prebuilt.targ
+        include ./deps/eng/tools/mk/Makefile.node_prebuilt.targ
+	include ./deps/eng/tools/mk/Makefile.agent_prebuilt.targ
 else
-        include ./tools/mk/Makefile.node.targ
+        include ./deps/eng/tools/mk/Makefile.node.targ
 endif
-include ./tools/mk/Makefile.smf.targ
-include ./tools/mk/Makefile.node_deps.targ
-include ./tools/mk/Makefile.targ
+include ./deps/eng/tools/mk/Makefile.smf.targ
+include ./deps/eng/tools/mk/Makefile.targ
