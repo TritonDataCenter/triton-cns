@@ -589,6 +589,67 @@ test('acme challenge support', function (t) {
 	t.end();
 });
 
+test('acme challenge on unlisted service (TRITON-599)', function (t) {
+	var config = {
+	    use_alias: true,
+	    forward_zones: {
+		'foo': { networks: ['aaaaa'] }
+	    },
+	    reverse_zones: {}
+	};
+	var challenge = 'OL92GcAcYP0DTCTVwMU46dpu73dAhu5XD6ahQiDg54M';
+	var vm = {
+	    uuid: 'abc123',
+	    alias: 'test',
+	    services: [
+	        { name: 'svc1', ports: [1234] }
+	    ],
+	    listInstance: true,
+	    listServices: false,
+	    owner: {
+		uuid: 'def432'
+	    },
+	    customer_metadata: {
+		'triton.cns.acme-challenge': challenge
+	    },
+	    nics: [
+		{
+		    ips: ['1.2.3.4'],
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones).sort(), ['3.2.1.in-addr.arpa', 'foo']);
+
+	t.deepEqual(Object.keys(zones['foo']).sort(),
+	    ['_acme-challenge.abc123.inst.def432',
+	    '_acme-challenge.svc1.svc.def432',
+	    '_acme-challenge.test.inst.def432', 'abc123.cmon',
+	    'abc123.inst.def432', 'svc1.svc.def432', 'test.inst.def432']);
+	t.deepEqual(Object.keys(zones['3.2.1.in-addr.arpa']), ['4']);
+
+	var fwd = zones['foo']['svc1.svc.def432'];
+	t.deepEqual(fwd, [
+	    {constructor: 'TXT', args: ['verifying:abc123'], src: 'abc123'}
+	]);
+	var acme = zones['foo']['_acme-challenge.test.inst.def432'];
+	t.deepEqual(acme, [
+	    {constructor: 'TXT', args: [challenge]}
+	]);
+	acme = zones['foo']['_acme-challenge.svc1.svc.def432'];
+	t.deepEqual(acme, [
+	    {constructor: 'TXT', args: [challenge], src: 'abc123'}
+	]);
+	var rev = zones['3.2.1.in-addr.arpa']['4'];
+	t.deepEqual(rev, [
+	    {constructor: 'PTR', args: ['test.inst.def432.foo']}
+	]);
+
+	t.end();
+});
+
 test('cmon everywhere', function (t) {
 	var config = {
 	    forward_zones: {
