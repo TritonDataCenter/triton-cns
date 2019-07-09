@@ -346,6 +346,70 @@ test('does not accept smartdc_role tag on non-admin', function (t) {
 	t.end();
 });
 
+test('accepts manta_role==loadbalancer tag on poseidon VMs', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			login: 'poseidon',
+			triton_cns_enabled: true,
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'manta_role': 'loadbalancer'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ { name: 'loadbalancer', ports: [] } ]);
+	t.strictEqual(out.listInstance, true);
+	t.strictEqual(out.listServices, true);
+	t.end();
+});
+
+test('accepts only whitelisted manta_role tag on poseidon VMs', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			login: 'poseidon',
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'manta_role': 'authcache'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
+	t.end();
+});
+
+test('does not accept manta_role tag on non-poseidon', function (t) {
+	var s = new FlagFilter({});
+	s.write({
+		uuid: 'abc123',
+		state: 'running',
+		owner: {
+			login: 'george',
+			approved_for_provisioning: true
+		},
+		server: {status: 'running'},
+		customer_metadata: {},
+		tags: {'manta_role': 'loadbalancer'}
+	});
+	var out = s.read();
+	t.strictEqual(typeof (out), 'object');
+	t.deepEqual(out.services, [ ]);
+	t.strictEqual(out.listInstance, false);
+	t.strictEqual(out.listServices, false);
+	t.end();
+});
+
 test('removes all records when vm is destroyed', function (t) {
 	var s = new FlagFilter({});
 	s.write({
