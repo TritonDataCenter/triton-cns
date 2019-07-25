@@ -7,7 +7,7 @@
 #
 
 #
-# Copyright (c) 2018, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -46,9 +46,11 @@ CONFIG_AGENT_LOCAL_MANIFESTS_DIRS=$SVC_ROOT
 source /opt/smartdc/boot/lib/util.sh
 sdc_common_setup
 
-echo "Adding CNS user"
-useradd -d /opt/triton/cns -P 'Metadata Reader' cns || \
-    fatal "failed to create user"
+if ! grep '^cns:' /etc/passwd >/dev/null; then
+    echo "Adding CNS user"
+    useradd -d /opt/triton/cns -P 'Metadata Reader' cns || \
+        fatal "failed to create user"
+fi
 
 echo "Installing cns redis"
 svccfg import $SVC_ROOT/smf/manifests/cns-redis.xml
