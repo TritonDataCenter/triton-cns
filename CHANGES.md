@@ -5,10 +5,19 @@
 -->
 
 <!--
-    Copyright (c) 2018, Joyent, Inc.
+    Copyright 2020 Joyent, Inc.
 -->
 
 # triton-cns
+
+## 0.2.0
+
+- triton-cns#18 forward zones should always be converted to lower case
+- triton-cns#14 always publish names for poseidon
+- TRITON-1789 automatically publish names for manta_role
+- TRITON-599, TRITON-798 Support multiple ACME challenges and better handling of challenges for new instances
+- TRITON-815 support rack aware networking
+- TRITON-1044 paginate AXFRs
 
 ## 0.1.3
 
