@@ -113,7 +113,11 @@ test('with use_alias', function (t) {
 	var config = {
 	    use_alias: true,
 	    forward_zones: {
-		'foo': { networks: ['*'] }
+		'foo': {
+		    networks: ['*'],
+		    proxy_addr: '9.9.9.9',
+		    proxy_networks: ['aaa1111']
+		}
 	    },
 	    reverse_zones: {}
 	};
@@ -131,6 +135,7 @@ test('with use_alias', function (t) {
 		    ip: '1.2.3.4',
 		    zones: ['foo'],
 		    network: {
+			uuid: 'abcd1234',
 			name: 'SDC-Customer-Public-Pool-72.2.118.0/23',
 			owner_uuids: ['def432']
 		    }
@@ -690,6 +695,102 @@ test('cmon everywhere', function (t) {
 	cmon = zones['bar']['abc123.cmon'];
 	t.deepEqual(cmon, [
 	    {constructor: 'CNAME', args: ['cmon.bar']}
+	]);
+
+	t.end();
+});
+
+test('reverse proxy zone - wildcard', function (t) {
+	var config = {
+	    forward_zones: {
+		'foo': {
+		    networks: ['*'],
+		    proxy_addr: '9.9.9.9',
+		    proxy_networks: ['*']
+		}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    services: [],
+	    listInstance: true,
+	    listServices: true,
+	    owner: {
+		uuid: 'def432'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo'],
+		    network: { name: 'Default-Fabric', owner_uuids: ['def432'] }
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones), ['foo']);
+
+	t.deepEqual(Object.keys(zones['foo']), ['abc123.inst.def432',
+	    'default-fabric.abc123.inst.def432', 'abc123.cmon']);
+
+	var fwd = zones['foo']['abc123.inst.def432'];
+	t.deepEqual(fwd, [
+	    {constructor: 'A', args: ['9.9.9.9']},
+	    {constructor: 'TXT', args: ['abc123']}
+	]);
+	var cmon = zones['foo']['abc123.cmon'];
+	t.deepEqual(cmon, [
+	    {constructor: 'CNAME', args: ['cmon.foo']}
+	]);
+
+	t.end();
+});
+
+test('reverse proxy zone - specific net', function (t) {
+	var config = {
+	    forward_zones: {
+		'foo': {
+		    networks: ['*'],
+		    proxy_addr: '9.9.9.9',
+		    proxy_networks: ['ddd111']
+		}
+	    },
+	    reverse_zones: {}
+	};
+	var vm = {
+	    uuid: 'abc123',
+	    services: [],
+	    listInstance: true,
+	    listServices: true,
+	    owner: {
+		uuid: 'def432'
+	    },
+	    nics: [
+		{
+		    ip: '1.2.3.4',
+		    zones: ['foo'],
+		    network: {
+			uuid: 'ddd111',
+			name: 'Default-Fabric',
+			owner_uuids: ['def432']
+		    }
+		}
+	    ]
+	};
+	var zones = buildZonesFromVm(vm, config, log);
+	t.deepEqual(Object.keys(zones), ['foo']);
+
+	t.deepEqual(Object.keys(zones['foo']), ['abc123.inst.def432',
+	    'default-fabric.abc123.inst.def432', 'abc123.cmon']);
+
+	var fwd = zones['foo']['abc123.inst.def432'];
+	t.deepEqual(fwd, [
+	    {constructor: 'A', args: ['9.9.9.9']},
+	    {constructor: 'TXT', args: ['abc123']}
+	]);
+	var cmon = zones['foo']['abc123.cmon'];
+	t.deepEqual(cmon, [
+	    {constructor: 'CNAME', args: ['cmon.foo']}
 	]);
 
 	t.end();
