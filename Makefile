@@ -1,5 +1,5 @@
 #
-# Copyright 2022, Joyent, Inc.
+# Copyright 2022 Joyent, Inc.
 #
 # Makefile: basic Makefile for template API service
 #
