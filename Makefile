@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019, Joyent, Inc. All rights reserved.
+# Copyright 2022, Joyent, Inc.
 #
 # Makefile: basic Makefile for template API service
 #
@@ -51,7 +51,8 @@ DOC_FILES	 = index.md metadata.md operator-guide.md
 #
 # Stuff needed for buildimage
 #
-BASE_IMAGE_UUID  = 18b094b0-eb01-11e5-80c1-175dac7ddf02
+# triton-origin-multiarch-15.4.1
+BASE_IMAGE_UUID  = 04a48d7d-6bb5-4e83-8c3b-e60a99e0f48f
 BUILDIMAGE_NAME = $(NAME)
 BUILDIMAGE_PKG	= $(TOP)/$(RELEASE_TARBALL)
 BUILDIMAGE_PKGSRC = redis-3.0.5

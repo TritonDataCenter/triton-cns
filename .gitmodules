@@ -6,7 +6,7 @@
 	url = https://github.com/joyent/jsstyle
 [submodule "deps/restdown"]
 	path = deps/restdown
-	url = https://github.com/trentm/restdown
+	url = https://github.com/joyent/restdown
 [submodule "deps/eng"]
 	path = deps/eng
 	url = https://github.com/joyent/eng.git
