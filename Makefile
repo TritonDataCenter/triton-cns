@@ -1,5 +1,6 @@
 #
-# Copyright 2022, Joyent, Inc.
+# Copyright 2022 Joyent, Inc.
+# Copyright 2022 MNX Cloud, Inc.
 #
 # Makefile: basic Makefile for template API service
 #
@@ -16,7 +17,7 @@
 
 NAME			:= cns
 NODE_PREBUILT_TAG	 = zone
-NODE_PREBUILT_VERSION	:= v4.9.0
+NODE_PREBUILT_VERSION	:= v6.17.0
 NODE_PREBUILT_IMAGE	 = 18b094b0-eb01-11e5-80c1-175dac7ddf02
 
 #

@@ -1,12 +1,12 @@
 [submodule "deps/javascriptlint"]
 	path = deps/javascriptlint
-	url = https://github.com/joyent/javascriptlint
+	url = https://github.com/TritonDataCenter/javascriptlint
 [submodule "deps/jsstyle"]
 	path = deps/jsstyle
-	url = https://github.com/joyent/jsstyle
+	url = https://github.com/TritonDataCenter/jsstyle
 [submodule "deps/restdown"]
 	path = deps/restdown
-	url = https://github.com/joyent/restdown
+	url = https://github.com/TritonDataCenter/restdown
 [submodule "deps/eng"]
 	path = deps/eng
-	url = https://github.com/joyent/eng.git
+	url = https://github.com/TritonDataCenter/eng.git

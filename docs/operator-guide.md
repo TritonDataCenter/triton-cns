@@ -9,6 +9,7 @@ markdown2extras: tables, code-friendly, cuddled-lists, fenced-code-blocks
 -->
 <!--
     Copyright (c) 2016, Joyent, Inc.
+    Copyright 2022 MNX Cloud, Inc.
 -->
 
 ## Introduction
@@ -39,7 +40,7 @@ The `cns-server` also provides a small REST API that can be used to inspect the
 state of the overall system. There's a commandline tool `cnsadm` that comes
 pre-installed inside the CNS zone which can be used to interrogate it. The
 `cnsadm` command has a manpage that is useful to read if you want to know
-more about this (you can also [view it online](https://github.com/joyent/triton-cns/blob/master/man/src/cnsadm.md)).
+more about this (you can also [view it online](https://github.com/TritonDataCenter/triton-cns/blob/master/man/src/cnsadm.md)).
 
 Configuration for the CNS system as a whole is stored in the SAPI metadata
 for the CNS SAPI service. This can be edited by hand using the `sapiadm`
@@ -99,44 +100,48 @@ development and testing, however.
 
 ### Small development/testing setup
 
- - CNS zone on headnode, with a NIC on `external` (192.168.1.22)
- - Client machines all have 192.168.1.22 listed explicitly in their
-   `/etc/resolv.conf` files, and can reach this address
- - Names are not resolvable from the public Internet
+* CNS zone on headnode, with a NIC on `external` (192.168.1.22)
+* Client machines all have 192.168.1.22 listed explicitly in their
+  `/etc/resolv.conf` files, and can reach this address
+* Names are not resolvable from the public Internet
 
 ### Internal-only corporate setup
 
 Existing infrastructure before CNS:
- - Pair of existing company recursive nameservers running ISC BIND, on
-   10.1.1.10 and 10.1.1.11
- - All client machines configured to use these as their recursive nameservers
+
+* Pair of existing company recursive nameservers running ISC BIND, on
+  10.1.1.10 and 10.1.1.11
+* All client machines configured to use these as their recursive nameservers
 
 CNS deployment:
- - CNS zone on headnode, with a NIC on `external` (10.1.2.5)
- - CNS has the existing recursive nameservers whitelisted as replication peers
- - Existing recursive nameservers configured to be authoritative for the CNS
-   suffix and set to use 10.1.2.5 as the "master" for the zone
- - Client machines do not communicate with CNS directly at all -- the recursive
-   nameservers are replicating the records from CNS and then answering queries
-   entirely on their own
+
+* CNS zone on headnode, with a NIC on `external` (10.1.2.5)
+* CNS has the existing recursive nameservers whitelisted as replication peers
+* Existing recursive nameservers configured to be authoritative for the CNS
+  suffix and set to use 10.1.2.5 as the "master" for the zone
+* Client machines do not communicate with CNS directly at all -- the recursive
+  nameservers are replicating the records from CNS and then answering queries
+  entirely on their own
 
 ### Publically resolvable setup
 
 Existing infrastructure before CNS:
- - A single "master" nameserver, running ISC BIND, on 123.45.67.10 (public IP)
- - Two geographically diverse "slave" nameservers, also BIND
- - `example.com` zone is served by all 3 NS and has appropriate glue and
-   delegation from root nameservers
+
+* A single "master" nameserver, running ISC BIND, on 123.45.67.10 (public IP)
+* Two geographically diverse "slave" nameservers, also BIND
+* `example.com` zone is served by all 3 NS and has appropriate glue and
+  delegation from root nameservers
 
 CNS deployment:
- - CNS zone on headnode, with a NIC on `public` (123.45.67.60)
- - CNS is configured in hidden master mode
- - CNS has the existing "master" and "slave" nameservers whitelisted as
-   replication peers
- - Existing "master" and "slave" nameservers are all configured to use
-   123.45.67.60 as a master for `cns.example.com`
- - NS glue records are added in the `example.com` zone listing only the 
-   "master" and two "slave" nameservers that pre-date CNS
+
+* CNS zone on headnode, with a NIC on `public` (123.45.67.60)
+* CNS is configured in hidden master mode
+* CNS has the existing "master" and "slave" nameservers whitelisted as
+  replication peers
+* Existing "master" and "slave" nameservers are all configured to use
+  123.45.67.60 as a master for `cns.example.com`
+* NS glue records are added in the `example.com` zone listing only the
+  "master" and two "slave" nameservers that pre-date CNS
 
 In this setup, all CNS generated names are resolvable from the public Internet.
 
@@ -189,44 +194,52 @@ zone is made a catch-all zone so it can list Fabric networks).
 ### Example: only public IP addresses in CNS
 
 Triton setup:
- - One network, "external", with Internet public IP addresses in `192.0.2.0/24`
- - Another network "internal", with addresses in `10.0.0.0/24`
- - Fabric networking enabled, user has a private fabric
+
+* One network, "external", with Internet public IP addresses in `192.0.2.0/24`
+* Another network "internal", with addresses in `10.0.0.0/24`
+* Fabric networking enabled, user has a private fabric
 
 CNS zone configuration:
- - DNS zone: `cns.foo.com`, configured with `networks = [ "external" ]`
-   (explicit list)
+
+* DNS zone: `cns.foo.com`, configured with `networks = [ "external" ]`
+  (explicit list)
 
 Example:
- - A container named `test` is deployed by user `jim`, with NICs on
-   "external", "internal", and `jim`'s private fabric
+
+* A container named `test` is deployed by user `jim`, with NICs on
+  "external", "internal", and `jim`'s private fabric
 
 Results:
- - `test.inst.jim.cns.foo.com` resolves only to the "external" address of the
-   `test` container. The "internal" and fabric addresses are not in DNS.
+
+* `test.inst.jim.cns.foo.com` resolves only to the "external" address of the
+  `test` container. The "internal" and fabric addresses are not in DNS.
 
 ### Example: split public/private zones
 
 Triton setup:
- - One network, "external", with Internet public IP addresses in `192.0.2.0/24`
- - Another network "internal", with addresses in `10.0.0.0/24`
- - Fabric networking enabled, user has a private fabric
+
+* One network, "external", with Internet public IP addresses in `192.0.2.0/24`
+* Another network "internal", with addresses in `10.0.0.0/24`
+* Fabric networking enabled, user has a private fabric
 
 CNS zone configuration:
- - DNS zone: `ext.foobar.com`, configured with `networks = [ "external" ]`
- - DNS zone: `int.foobar.com`, configured with `networks = [ "*" ]`
-   (a catch-all or wildcard zone)
+
+* DNS zone: `ext.foobar.com`, configured with `networks = [ "external" ]`
+* DNS zone: `int.foobar.com`, configured with `networks = [ "*" ]`
+  (a catch-all or wildcard zone)
 
 Example:
- - A container named `test` is deployed by user `jill`, with NICs on
-   "external", "internal", and `jill`'s private fabric
+
+* A container named `test` is deployed by user `jill`, with NICs on
+  "external", "internal", and `jill`'s private fabric
 
 Results:
- - `test.inst.jill.ext.foobar.com` resolves only to the "external" address of
-   the `test` container.
- - `test.inst.jill.int.foobar.com` resolves to both the "internal" address and
-   the private fabric address of the `test` container (there will be two `A`
-   records served for this name)
+
+* `test.inst.jill.ext.foobar.com` resolves only to the "external" address of
+  the `test` container.
+* `test.inst.jill.int.foobar.com` resolves to both the "internal" address and
+  the private fabric address of the `test` container (there will be two `A`
+  records served for this name)
 
 ## Tasks
 
@@ -234,7 +247,7 @@ Results:
 
 To create the CNS service and zone on your headnode:
 
-```
+```shell
 [root@headnode ~]# sdcadm experimental cns
 ...
 [root@headnode ~]# sdcadm experimental update-other
@@ -261,7 +274,7 @@ outage). Make sure you've advised your users in advance.
 
 To enter the CNS zone and view the current configuration of the system:
 
-```
+```shell
 [root@headnode ~]# sdc-login cns
 ...
 [root@uuid (dc:cns0) ~]# cnsadm config
@@ -314,7 +327,7 @@ this has some overlap with the "peers" property on a particular zone.
 
 You can also view detailed configuration about one zone using `cnsadm`:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm zones dc.cns.joyent.us
 zone:            dc.cns.joyent.us
 networks:        *
@@ -332,7 +345,7 @@ From the CNS zone on the headnode, you can use the `cnsadm zones` command to
 manage DNS zones in the CNS configuration. This is the output of `cnsadm zones`
 with no arguments, for a typical default configuration:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm zones
 ZONE                     NETWORKS   PEERS                      HIDDEN PRIMARY
 dc.cns.joyent.us         *                                     false
@@ -345,7 +358,7 @@ or wildcard zone (indicated by `*` under `NETWORKS`).
 To change this to a "public IP addresses only" configuration, we would simply
 modify the network list on the zone:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm zones dc.cns.joyent.us networks=8c26b4f8-b67e-11e6-8ee4-ffb3a2f73c8d
 ```
 
@@ -355,7 +368,7 @@ in AdminUI, or by using the `sdc-napi` command)
 
 This would change the output of `cnsadm zones` to now look like:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm zones
 ZONE                     NETWORKS   PEERS                      HIDDEN PRIMARY
 dc.cns.joyent.us         (1 UUIDs)                             false
@@ -365,13 +378,13 @@ dc.cns.joyent.us         (1 UUIDs)                             false
 Now, if we wanted to change to a public-private split configuration, we would
 add a second zone as a new wildcard:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm zones -a dc-int.cns.joyent.us networks=*
 ```
 
 And the new output of `cnsadm zones`:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm zones
 ZONE                     NETWORKS   PEERS                      HIDDEN PRIMARY
 dc.cns.joyent.us         (1 UUIDs)                             false
@@ -388,7 +401,7 @@ into the CNS zone for further details.
 Enter the CNS zone from the headnode, and check that no services are down
 or in maintenance:
 
-```
+```shell
 [root@headnode ~]# sdc-login cns
 ...
 [root@uuid (dc:cns0) ~]# svcs -x
@@ -404,12 +417,12 @@ from the `cns-updater` service.
 The logs should give hints as to the source of your trouble, but it is likely
 if you reach this point that you have encountered a bug. Please include these
 logs and also information about the CNS configuration in your bug report, which
-you should file on the 
-[GitHub `triton-cns` repository](https://github.com/joyent/triton-cns/issues).
+you should file on the
+[GitHub `triton-cns` repository](https://github.com/TritonDataCenter/triton-cns/issues).
 
 If services are running normally, use the `cnsadm status` command to check last changed times, serial numbers and the status of replication peers:
 
-```
+```shell
 [root@uuid (staging-1:cns0) ~]# cnsadm status
 ZONE                     LATEST SERIAL  CHANGED
 staging-1.cns.joyent.us  373423966      3 days ago
@@ -424,11 +437,11 @@ This output is from a real working configuration to show what the replication
 peer status output looks like.
 
 Here we can see that this CNS is configured with the zone
-`staging-1.cns.joyent.us`, and has generated records for it, as there is a 
+`staging-1.cns.joyent.us`, and has generated records for it, as there is a
 valid serial number given. Reverse-lookup records have also been generated for
 IP addresses under `172.26.3.x`.
 
-This CNS currently has 1 known replication peer, `172.24.2.49`, which has 
+This CNS currently has 1 known replication peer, `172.24.2.49`, which has
 replicated both zones from it. We can see that the latest serial the peer has
 copied from us is the same as the latest serial generated. If this were not
 the case, there would be a note in the "DRIFT" column highlighting that this
@@ -441,7 +454,7 @@ The commandline tool `dig` can also be very valuable in debugging DNS-related
 problems. The tool is pre-installed in the CNS zone, as well as the SDC
 headnode. You can use it to look up a particular name for testing:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# dig example.inst.fred.dc.cns.joyent.us @localhost
 ...
 ;; Got answer:
@@ -474,7 +487,7 @@ First, as our BIND server is going to be placed on the `external` network, we
 will need to give the CNS zone an IP on that network as well to communicate
 with the BIND server.
 
-```
+```shell
 [root@headnode ~]# /usbkey/scripts/add_external_nic.sh $(vmadm lookup alias=cns0)
 [root@headnode ~]# vmadm get $(vmadm lookup alias=cns0) | json nics | json -a nic_tag ip
 admin 10.0.0.107
@@ -486,7 +499,7 @@ name `ns1.joyent.us`.
 
 Add the nameserver as a replication peer in CNS:
 
-```
+```shell
 [root@headnode ~]# sdc-login cns
 ...
 [root@uuid (dc:cns0) ~]# cnsadm config allow_transfer+=10.0.1.10
@@ -495,7 +508,7 @@ Add the nameserver as a replication peer in CNS:
 
 And now add the following snippet into the BIND configuration file:
 
-```
+```conf
 masters cns {
     10.0.1.82;
 };
@@ -509,14 +522,14 @@ zone "dc.cns.joyent.us" {
 
 Reload the configuration:
 
-```
+```shell
 [user@nameserver ~]$ rndc reload
 ```
 
 And finally, check the output of `cnsadm status` to verify that the peer is
 now known and in sync:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm status
 ZONE                     LATEST SERIAL  CHANGED
 dc.cns.joyent.us         373423966      1 minute ago
@@ -542,13 +555,13 @@ For example, to look at CNS's reasoning about the VM with UUID
 `99a430dd-88a3-4cc4-9046-c76810491445`, use the following command inside the
 CNS zone:
 
-```
+```shell
 # cat $(svcs -L cns-updater) | grep 99a430dd-88a3-4cc4-9046-c76810491445 | bunyan
 ```
 
 The log messages with reasoning information will look like this:
 
-```
+```shell
 [2016-07-06T17:38:28.294Z] DEBUG: cns/24595 on 859bd73b-9766-444b-ac8d-ea2f8209fea8: updating vm (stage=UpdateStream)
     info: {
       "vm": "99a430dd-88a3-4cc4-9046-c76810491445",
@@ -574,33 +587,33 @@ The log messages with reasoning information will look like this:
 The exact fields here are subject to change since they are not a guaranteed
 API, but below are their definitions at the time of writing:
 
- - `"vm"` contains the VM's UUID
- - `"l_s"` means "list services" -- if it's true, CNS decided to generate
-   service records for this VM (`.svc.`)
- - `"l_i"` means "list instance" -- if it's true, CNS decided to generate
-   instance records
- - `"svcs"` contains an array of all the recognized services in this VM's
-   `triton.cns.services` tag
- - `"c"` contains *counts* of final generated records within each DNS zone
- - `"o"` shows the origin of this visit to the VM (the reason why CNS was
-   looking at it to begin with)
- - `"why"` contains a list of all the decision flags that affected this VM
+* `"vm"` contains the VM's UUID
+* `"l_s"` means "list services" -- if it's true, CNS decided to generate
+  service records for this VM (`.svc.`)
+* `"l_i"` means "list instance" -- if it's true, CNS decided to generate
+  instance records
+* `"svcs"` contains an array of all the recognized services in this VM's
+  `triton.cns.services` tag
+* `"c"` contains *counts* of final generated records within each DNS zone
+* `"o"` shows the origin of this visit to the VM (the reason why CNS was
+  looking at it to begin with)
+* `"why"` contains a list of all the decision flags that affected this VM
 
 Some examples of decision flags that may be seen in the `"why"` field:
 
- - `"user_en_flag"` -- VM not listed at all because user does not have
-                       `triton_cns_enabled` flag set
- - `"user_not_approved"` -- VM not listed at all because user is not
-                            approved for provisioning
- - `"inst_en_tag"` -- VM not listed at all because it has the
-                      `triton.cns.disable` tag set
- - `"inst_en_flag"` -- VM was removed from services because it has the
-                       `triton.cns.status` metadata key set to `down`
- - `"cn_down"` -- VM was removed from services because the CN it runs on
-                  seems to be down
- - `"vm_down"` -- VM was removed from services because it is stopped
- - `"invalid_tag"` -- the VM's `triton.cns.services` tag could not be parsed
-                      so no services listings are possible
+* `"user_en_flag"` -- VM not listed at all because user does not have
+                      `triton_cns_enabled` flag set
+* `"user_not_approved"` -- VM not listed at all because user is not
+                           approved for provisioning
+* `"inst_en_tag"` -- VM not listed at all because it has the
+                     `triton.cns.disable` tag set
+* `"inst_en_flag"` -- VM was removed from services because it has the
+                      `triton.cns.status` metadata key set to `down`
+* `"cn_down"` -- VM was removed from services because the CN it runs on
+                 seems to be down
+* `"vm_down"` -- VM was removed from services because it is stopped
+* `"invalid_tag"` -- the VM's `triton.cns.services` tag could not be parsed
+                     so no services listings are possible
 
 This is not an exhaustive list, but covers the most commonly encountered cases
 (due to e.g. forgetting to set the user enabled flag or issues with tags).
@@ -610,7 +623,7 @@ This is not an exhaustive list, but covers the most commonly encountered cases
 When investigating peer sync delays or other problems with replication, the
 `cnsadm peers` command can be of use:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# cnsadm peers 10.0.1.10
 address:       10.0.1.10
 version:       ISC BIND 9.10.2-P1
@@ -651,7 +664,7 @@ may still help you, but the bug needs to be fixed too.
 
 You can check the size of the Redis RDB dump like so:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# du -hs /data/redis/dump.rdb
 3.9M    /data/redis/dump.rdb
 ```
@@ -663,7 +676,7 @@ CNS).
 
 To do this, first stop all the CNS services:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# svcadm disable cns-server
 [root@uuid (dc:cns0) ~]# svcadm disable cns-updater
 [root@uuid (dc:cns0) ~]# svcadm disable cns-redis
@@ -671,7 +684,7 @@ To do this, first stop all the CNS services:
 
 Wait until the Redis server has entirely shut down:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# svcs -p cns-redis
 STATE          STIME    FMRI
 online*        22:17:39 svc:/triton/application/cns-redis:default
@@ -684,7 +697,7 @@ offline        22:17:39 svc:/triton/application/cns-redis:default
 Now simply delete the `dump.rdb` file and start `cns-redis` and `cns-updater`
 back up again:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# rm -f /data/redis/dump.rdb
 [root@uuid (dc:cns0) ~]# svcadm enable cns-redis
 [root@uuid (dc:cns0) ~]# svcadm enable cns-updater
@@ -694,7 +707,7 @@ While it is safe to start the `cns-server` back up at this point, too, it's not
 going to serve anything useful until the `cns-updater` has done its first
 update. We can watch the logs of the `cns-updater` to see when this happens:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# tail -f $(svcs -L cns-updater) | bunyan -o short
 ...
 22:48:36.527Z  INFO cns: Poll done, committing...
@@ -706,6 +719,6 @@ update. We can watch the logs of the `cns-updater` to see when this happens:
 
 Now we enable the `cns-server` and things should return to normal:
 
-```
+```shell
 [root@uuid (dc:cns0) ~]# svcadm enable cns-server
 ```
