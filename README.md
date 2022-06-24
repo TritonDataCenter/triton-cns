@@ -34,4 +34,4 @@ See the [REST API](docs/index.md) for communicating with CNS.
 
 This blog post details how to use CNS to connect containers within a Triton DC:
 
-https://docs.joyent.com/public-cloud/network/cns/usage
+<https://docs.joyent.com/public-cloud/network/cns/usage>
