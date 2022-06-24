@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joyent/triton-cns.git"
+    "url": "git+https://github.com/TritonDataCenter/triton-cns.git"
   },
   "author": "Alex Wilson",
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/joyent/triton-cns/issues"
+    "url": "https://github.com/TritonDataCenter/triton-cns/issues"
   },
-  "homepage": "https://github.com/joyent/triton-cns#readme",
+  "homepage": "https://github.com/TritonDataCenter/triton-cns#readme",
   "devDependencies": {
     "minimatch": "^3.0.0",
     "native-dns": "^0.7.0",
@@ -38,7 +38,7 @@
     "restify": "4.3.0",
     "restify-clients": "1.6.0",
     "restify-errors": "4.3.0",
-    "sdc-scripts": "git+https://github.com/joyent/sdc-scripts.git#deefaef587ed3bee2706cb6e53ee3468e682932e",
+    "sdc-scripts": "git+https://github.com/TritonDataCenter/sdc-scripts.git#deefaef587ed3bee2706cb6e53ee3468e682932e",
     "sprintf-js": "1.0.3",
     "triton-netconfig": "1.4.0",
     "triton-tags": "1.4.0",

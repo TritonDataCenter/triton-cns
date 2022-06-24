@@ -1,4 +1,4 @@
-cnsadm 1 "Jan 2016" cns "CNS Commands"
+cnsadm 1 "June 2022" cns "CNS Commands"
 ======================================
 
 NAME
@@ -50,8 +50,8 @@ glue records, may prove important in correctly configuring CNS.
 There are 3 key modes that CNS can be deployed in:
 
   `Standalone` mode: is the default mode of operation, where CNS serves
-  records as an authoritative nameserver. CNS must be given an external IP 
-  address and the DNS zones delegated to it by adding NS glue records to their 
+  records as an authoritative nameserver. CNS must be given an external IP
+  address and the DNS zones delegated to it by adding NS glue records to their
   parent zone.
 
   `Primary` mode: functions identically to Standalone mode, except that CNS is
@@ -59,15 +59,15 @@ There are 3 key modes that CNS can be deployed in:
   set of secondary nameservers. These "peer" nameservers stay in sync with CNS
   using (incremental) zone transfers and serve the same records it does.
 
-  `Hidden Primary` mode (sometimes called "hidden master"): does not require 
-  CNS to be exposed to clients directly. Instead, a set of peer nameservers 
+  `Hidden Primary` mode (sometimes called "hidden master"): does not require
+  CNS to be exposed to clients directly. Instead, a set of peer nameservers
   serve the clients on its behalf after having synchronized the DNS records (
   over some private network) from it using zone transfers. One of the peers is
   designated as the "visible primary" and its name is listed on SOA records in
   the "mname" field as the zone primary, instead of CNS.
 
 In both Standalone and Primary mode, CNS must know a publically-resolvable DNS
-name for its own external address. To use these modes, all that is needed from 
+name for its own external address. To use these modes, all that is needed from
 a clean install is to set this name and then change the name of the default DNS
 zone as needed (see *EXAMPLES*, below).
 
@@ -168,4 +168,4 @@ The valid _values_ depend on the type of the field being altered:
 BUGS
 ----
 
-https://github.com/joyent/triton-cns/issues
+https://github.com/TritonDataCenter/triton-cns/issues
