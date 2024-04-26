@@ -123,6 +123,17 @@
           },
           "hidden_primary": {
             "type": "boolean"
+          },
+          "proxy_addr": {
+            "type": "string"
+          },
+          "proxy_networks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[*]$|^[a-f0-9-]+$"
+            }
           }
         },
         "additionalProperties": false
