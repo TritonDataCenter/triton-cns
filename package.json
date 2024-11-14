@@ -1,6 +1,6 @@
 {
   "name": "triton-cns",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Trition container naming service",
   "main": "index.js",
   "scripts": {
