@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) 2018, Joyent, Inc.
+ * Copyright 2016, 2020, The University of Queensland
  */
 
 var dashdash = require('dashdash');
@@ -291,7 +292,17 @@ function do_zones() {
 			return ((v || []).join(','));
 		    }},
 		    {field: 'hidden_primary', title: 'hidden primary',
-			type: 'boolean'}
+			type: 'boolean'},
+		    {field: 'proxy_addr', title: 'proxy address',
+			type: 'string'},
+		    {field: 'proxy_networks', stringify: function (v) {
+			v = v || [];
+			if (v.length === 1 && v[0] === '*')
+				return ('*');
+			if (v.length === 0)
+				return ('');
+			return (sprintf('(%d UUIDs)', v.length));
+		    }}
 		];
 		var objs = Object.keys(config.forward_zones).map(function (z) {
 			var obj = config.forward_zones[z];
@@ -338,7 +349,12 @@ function do_zones() {
 		    type: 'array',
 		    items: {type: 'string'}
 		},
-		'hidden_primary': {type: 'boolean'}
+		'hidden_primary': {type: 'boolean'},
+		'proxy_addr': {type: 'string'},
+		'proxy_networks': {
+		    type: 'array',
+		    items: {type: 'string'}
+		}
 	    }
 	};
 	if (args.length === 0 && !opts['delete']) {
