@@ -42,7 +42,7 @@
     "sprintf-js": "1.0.3",
     "triton-netconfig": "1.4.0",
     "triton-tags": "1.4.0",
-    "uuid": "3.3.2",
+    "uuid": "14.0.0",
     "vasync": "2.2.0"
   }
 }
